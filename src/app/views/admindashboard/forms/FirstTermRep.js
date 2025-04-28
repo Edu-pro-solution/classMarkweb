@@ -1,6 +1,6 @@
 import React, {
-  useContext,
   Fragment,
+  useContext,
   useEffect,
   useState,
   useRef,
@@ -22,9 +22,10 @@ import { useReactToPrint } from "react-to-print";
 import useFetch from "../../../../hooks/useFetch";
 import axios from "axios";
 import useAuth from "../../../../app/hooks/useAuth";
-import "./report.css";
-
 import { SessionContext } from "../../../components/MatxLayout/Layout1/SessionContext";
+
+import "./report.css";
+import "./print.css";
 
 const ContentBox = styled("div")(({ theme }) => ({
   margin: "30px",
@@ -45,23 +46,58 @@ const FirstTermRep = ({ studentId }) => {
   const handlePrint = useReactToPrint({
     content: () => componentRef.current,
   });
+  const handlePrintInNewTab = () => {
+    // Open a new window/tab
+    const printWindow = window.open("", "_blank");
 
-  const [studentData, setStudentData] = useState(null);
+    // Generate printable content
+    const contentToPrint = componentRef.current.cloneNode(true);
+    const elementsToHide = contentToPrint.querySelectorAll(".dont-print");
+    elementsToHide.forEach((element) => {
+      element.style.display = "none";
+    });
+
+    // Append content to the new window/tab
+    printWindow.document.body.appendChild(contentToPrint);
+
+    // Copy styles from the current document to the new window/tab
+    const styleSheets = [...document.styleSheets]
+      .map((styleSheet) => {
+        try {
+          return [...styleSheet.cssRules]
+            .map((rule) => rule.cssText)
+            .join("\n");
+        } catch (e) {
+          console.error("Error accessing stylesheet:", e);
+          return "";
+        }
+      })
+      .join("\n");
+
+    const styleElement = printWindow.document.createElement("style");
+    styleElement.textContent = styleSheets;
+    printWindow.document.head.appendChild(styleElement);
+
+    // Trigger print dialog
+    printWindow.print();
+  };
+
+  const [studentData, setStudentData] = useState([]);
   const [psyData, setPsyData] = useState(null);
   const { currentSession } = useContext(SessionContext);
 
-  // const { id } = useParams();
-  const id = studentId;
+  const { id } = useParams();
 
-  const { data } = useFetch(`/get-students/${id}/${currentSession._id}`);
+  // const { data } = useFetch(`/students/${id}`);
 
-  useEffect(() => {}, [data]);
-  console.log("Student ID:", id);
-  console.log("Current Session ID:", currentSession._id);
-  console.log("this is the student data", data);
+  const { data } = useFetch(`/get-students/${studentId}/${currentSession._id}`);
+
+  // const { data,  } = useFetch(`/students/${user._id}`); // Fetch data using the correct URL
 
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [teacherName, setTeacherName] = useState("");
+
   const [error, setError] = useState(null);
   const [schoolSettings, setSchoolSettings] = useState({
     principalName: "",
@@ -82,27 +118,42 @@ const FirstTermRep = ({ studentId }) => {
 
   const apiUrl = process.env.REACT_APP_API_URL;
 
-  // Debug: Log the studentId and currentSession
-  useEffect(() => {}, [studentId, currentSession]);
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     setLoading(true);
 
+  //     try {
+  //       // Fetch student data
+  //       const studentData = await fetchStudentData(studentId);
+
+  //       // Set the student data in state
+  //       setStudentData(studentData);
+
+  //       setLoading(false);
+  //     } catch (error) {
+  //       // Handle errors
+  //       setError(error.message);
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchData();
+
+  //   console.log("Student ID in useEffect:", studentId);
+  // }, [studentId, currentSession]);
   useEffect(() => {
+    if (!studentId || !currentSession?._id) return;
+
     const fetchData = async () => {
       setLoading(true);
 
       try {
-        // Fetch student data
-        const fetchedStudentData = await fetchStudentData(studentId);
-
-        // Debug: Log the fetched student data
-
-        // Set the student data in state
-        setStudentData(fetchedStudentData);
-
-        setLoading(false);
+        const studentScores = await fetchStudentData(studentId);
+        setStudentData(studentScores);
       } catch (error) {
-        // Handle errors
-        console.error("Error in fetchData:", error);
-        setError(error.message);
+        console.error("Error loading student scores:", error);
+        setError("Failed to load student data");
+      } finally {
         setLoading(false);
       }
     };
@@ -110,6 +161,130 @@ const FirstTermRep = ({ studentId }) => {
     fetchData();
   }, [studentId, currentSession]);
 
+  const fetchclassteacher = async (studentId) => {
+    try {
+      const token = localStorage.getItem("jwtToken");
+      if (!token) {
+        throw new Error("JWT token not found");
+      }
+
+      const headers = {
+        Authorization: `Bearer ${token}`,
+      };
+
+      const response = await axios.get(
+        `${apiUrl}/api/class/${currentSession._id}`,
+        { headers }
+      );
+
+      // Debug: Log the entire API response
+      console.log("API Response for class:", response.data);
+
+      // Assuming 'data' holds the student data
+      const studentClassName = data?.classname; // Replace with correct field
+      if (!studentClassName) {
+        throw new Error("Student's class is not found");
+      }
+
+      // Find the class that matches the student's class name
+      const matchedClass = response.data.find(
+        (classItem) => classItem.name === studentClassName
+      );
+
+      if (matchedClass) {
+        console.log("Class Teacher:", matchedClass.teacher);
+        setTeacherName(matchedClass.teacher);
+        return matchedClass.teacher;
+      } else {
+        console.log("No class found matching the student's class.");
+      }
+    } catch (error) {
+      console.error("Error fetching class teacher:", error);
+      // throw new Error("Failed to fetch class teacher");
+    }
+  };
+
+  fetchclassteacher();
+
+  // const fetchStudentData = async (studentId) => {
+  //   try {
+  //     const token = localStorage.getItem("jwtToken");
+  //     if (!token) {
+  //       throw new Error("JWT token not found");
+  //     }
+
+  //     const headers = {
+  //       Authorization: `Bearer ${token}`,
+  //     };
+
+  //     const response = await axios.get(
+  //       `${apiUrl}/api/get-scores-by-student/${studentId}/${currentSession._id}`,
+  //       { headers }
+  //     );
+
+  //     const filteredScores = response.data.scores.filter(
+  //       (score) =>
+  //         (score.marksObtained !== undefined || score.marksObtained === 0) &&
+  //         score.examId.name.toUpperCase() === "SECOND TERM"
+  //     );
+
+  //     if (filteredScores.length === 0) {
+  //       throw new Error("No second term scores found for the student");
+  //     }
+
+  //     console.log("Filtered Scores:", filteredScores);
+
+  //     const scoresWithPositions = await Promise.all(
+  //       filteredScores.map(async (score) => {
+  //         const { examId, subjectId } = score;
+
+  //         if (!examId || !subjectId) {
+  //           console.error(
+  //             "Exam ID or Subject ID not found for a score:",
+  //             score
+  //           );
+  //           return { ...score, position: 0 };
+  //         }
+
+  //         const allStudentsData = await fetchAllStudentsData(
+  //           examId._id,
+  //           subjectId._id
+  //         );
+
+  //         const sortedStudents = allStudentsData.sort(
+  //           (a, b) => b.marksObtained - a.marksObtained
+  //         );
+
+  //         const studentPosition =
+  //           sortedStudents.findIndex(
+  //             (student) => student.studentId?._id === studentId
+  //           ) + 1;
+
+  //         console.log(
+  //           `Position of current student for Subject ${subjectId._id} and Exam ${examId._id}:`,
+  //           studentPosition
+  //         );
+
+  //         return {
+  //           ...score,
+  //           position: studentPosition,
+  //         };
+  //       })
+  //     );
+
+  //     console.log("Scores with Positions:", scoresWithPositions); // Log scores with positions
+
+  //     // Make sure scoresWithPositions is an array with at least one element
+  //     if (scoresWithPositions && scoresWithPositions.length > 0) {
+  //       return scoresWithPositions;
+  //     } else {
+  //       throw new Error("No scores available");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching student data:", error);
+  //     // throw new Error("Failed to fetch student data");
+  //   }
+  // };
   const fetchStudentData = async (studentId) => {
     try {
       const token = localStorage.getItem("jwtToken");
@@ -126,24 +301,33 @@ const FirstTermRep = ({ studentId }) => {
         { headers }
       );
 
-      // Debug: Log the entire API response
+      console.log("Raw Scores Response:", response.data);
+      // console.log("Score being checked:", score);
+      // console.log("Valid marks?", validMarks, "Is second term?", isSecondTerm);
 
       const filteredScores = response.data.scores.filter(
         (score) =>
           (score.marksObtained !== undefined || score.marksObtained === 0) &&
-          score.examId.name.toUpperCase() === "FIRST TERM"
+          // score.examId.name.toUpperCase() === "SECOND TERM"
+          score?.examId?.name?.toUpperCase() === "FIRST TERM"
       );
 
       if (filteredScores.length === 0) {
-        throw new Error("No first term scores found for the student");
+        console.warn("No first term scores found for the student");
+        return []; // <<< Important: Return empty array instead of throwing
       }
+      console.log("Filtered Scores:", filteredScores);
 
       const scoresWithPositions = await Promise.all(
         filteredScores.map(async (score) => {
           const { examId, subjectId } = score;
 
           if (!examId || !subjectId) {
-            return { ...score, position: 0 };
+            console.error(
+              "Exam ID or Subject ID not found for a score:",
+              score
+            );
+            return { ...score, position: "-" }; // use placeholder
           }
 
           const allStudentsData = await fetchAllStudentsData(
@@ -160,8 +344,6 @@ const FirstTermRep = ({ studentId }) => {
               (student) => student.studentId?._id === studentId
             ) + 1;
 
-          // Debug: Log the position for each subject
-
           return {
             ...score,
             position: studentPosition,
@@ -169,17 +351,15 @@ const FirstTermRep = ({ studentId }) => {
         })
       );
 
-      // Make sure scoresWithPositions is an array with at least one element
-      if (scoresWithPositions && scoresWithPositions.length > 0) {
-        return scoresWithPositions;
-      } else {
-        throw new Error("No scores available");
-      }
+      return scoresWithPositions;
     } catch (error) {
       console.error("Error fetching student data:", error);
-      // throw new Error("Failed to fetch student data");
+      return []; // <<< Also important: always return [] on error
     }
   };
+  // if (!examId || !subjectId) {
+  //   console.error("Missing examId or subjectId:", score);
+  // }
 
   const fetchAllStudentsData = async (examId, subjectId) => {
     try {
@@ -197,17 +377,20 @@ const FirstTermRep = ({ studentId }) => {
         { headers }
       );
 
-      // Debug: Log all students data
+      console.log("All Students Data:", response.data);
 
       const data = response.data;
       if (data && data.scores) {
+        console.log("Number of students with marks:", data.scores.length);
         const studentsWithMarks = data.scores.filter(
           (student) =>
             student.marksObtained !== undefined && student.marksObtained !== 0
         );
+        console.log("Students with marks:", studentsWithMarks);
 
         return studentsWithMarks;
       } else {
+        console.log("No scores data available.");
         return [];
       }
     } catch (error) {
@@ -216,69 +399,187 @@ const FirstTermRep = ({ studentId }) => {
     }
   };
 
+  // const fetchPsyData = async (studentId) => {
+  //   console.log("Before API call...");
+  //   try {
+  //     const token = localStorage.getItem("jwtToken");
+  //     const headers = {
+  //       Authorization: `Bearer ${token}`,
+  //     };
+
+  //     // const response = await axios.get(
+  //     //   `${apiUrl}/api/get-psy-by-student/${studentId}/${currentSession._id}`,
+  //     //   { headers }
+  //     // );
+  //     const term = "SECOND TERM";
+  //     const response = await axios.get(
+  //       `${apiUrl}/api/get-psy-by-student/${studentId}/${currentSession._id}?term=${term}`,
+  //       { headers }
+  //     );
+  //     console.log("API response status:", response.status);
+  //     console.log("Original data:", response.data);
+
+  //     return { ...response.data };
+  //   } catch (error) {
+  //     console.error("Error fetching student data:", error);
+  //     throw new Error("Failed to fetch student data");
+  //   }
+  // };
+
+  // const fetchPsyData = async (studentId, examId) => {
+  //   console.log("Before API call...");
+
+  //   // Log examId and currentSession._id to identify what is missing
+
+  //   try {
+  //     const token = localStorage.getItem("jwtToken");
+  //     const headers = {
+  //       Authorization: `Bearer ${token}`,
+  //     };
+
+  //     // Make sure `examId` and `currentSession._id` are valid
+  //     if (!examId || !currentSession?._id) {
+  //       throw new Error("Missing examId or sessionId");
+  //     }
+
+  //     // Make the API call with the studentId, examId, and sessionId
+  //     const response = await axios.get(
+  //       `${apiUrl}/api/get-psy-by-student/${studentId}/${examId}/${currentSession._id}`,
+  //       { headers }
+  //     );
+  //     console.log("examId:", examId);
+  //     console.log(
+  //       "currentSession._id:",
+  //       currentSession ? currentSession._id : "No currentSession"
+  //     );
+  //     console.log("API response status:", response.status);
+  //     console.log("Original data:", response.data);
+
+  //     return { ...response.data }; // Return the data for further use
+  //   } catch (error) {
+  //     console.error("Error fetching student data:", error);
+  //     throw new Error("Failed to fetch student data");
+  //   }
+  // };
+  // const fetchPsyData = async (studentId, examId) => {
+  //   console.log("Before API call...");
+
+  //   // Log `examId` and `currentSession` to ensure they are being passed correctly
+  //   console.log("examId:", examId);
+  //   console.log("currentSession:", currentSession);
+
+  //   try {
+  //     const token = localStorage.getItem("jwtToken");
+  //     const headers = {
+  //       Authorization: `Bearer ${token}`,
+  //     };
+
+  //     // Make sure `examId` and `currentSession._id` are valid
+  //     if (!examId || !currentSession?._id) {
+  //       throw new Error("Missing examId or sessionId");
+  //     }
+
+  //     // Make the API call with the studentId, examId, and sessionId
+  //     const response = await axios.get(
+  //       `${apiUrl}/api/get-psy-by-student/${studentId}/${examId}/${currentSession._id}`,
+  //       { headers }
+  //     );
+  //     console.log("API response status:", response.status);
+  //     console.log("Original data:", response.data);
+
+  //     return { ...response.data }; // Return the data for further use
+  //   } catch (error) {
+  //     console.error("Error fetching student data:", error);
+  //     throw new Error("Failed to fetch student data");
+  //   }
+  // };
+  // const fetchPsyData = async (studentId) => {
+  //   console.log("Before API call...");
+
+  //   try {
+  //     const token = localStorage.getItem("jwtToken");
+  //     const headers = {
+  //       Authorization: `Bearer ${token}`,
+  //     };
+
+  //     // Make sure currentSession._id is valid
+  //     if (!currentSession?._id) {
+  //       throw new Error("Missing sessionId");
+  //     }
+
+  //     // Make the API call with studentId and sessionId
+  //     const response = await axios.get(
+  //       `${apiUrl}/api/get-psy-by-student/${studentId}/${currentSession._id}`,
+  //       { headers }
+  //     );
+  //     console.log("API response status:", response.status);
+  //     console.log("Original data:", response.data);
+
+  //     const filteredScores = response.data.marks.filter(
+  //       (mark) => mark.examName?.toUpperCase() === "SECOND TERM" // Use examName instead of examId
+  //     );
+
+  //     if (filteredScores.length === 0) {
+  //       console.warn("No second term scores found for the student");
+  //       return []; // <<< Important: Return empty array instead of throwing
+  //     }
+
+  //     console.log("Filtered Scores:", filteredScores);
+
+  //     return filteredScores; // Return filtered scores
+  //   } catch (error) {
+  //     console.error("Error fetching student data:", error);
+  //     return []; // <<< Always return an empty array in case of error
+  //   }
+  // };
   const fetchPsyData = async (studentId) => {
+    console.log("Before API call...");
+
     try {
       const token = localStorage.getItem("jwtToken");
       const headers = {
         Authorization: `Bearer ${token}`,
       };
 
-      // const response = await axios.get(
-      //   `${apiUrl}/api/get-psy-by-student/${studentId}/${currentSession._id}`,
-      //   { headers }
-      // );
-      const term = "FIRST TERM";
+      // Ensure currentSession._id is valid
+      if (!currentSession?._id) {
+        throw new Error("Missing sessionId");
+      }
+
+      // Define the exam name you are filtering by
+      const examName = "FIRST TERM"; // You can dynamically set this if needed
+
+      // Make the API call with studentId, sessionId, and examName as query params
       const response = await axios.get(
-        `${apiUrl}/api/get-psy-by-student/${studentId}/${currentSession._id}?term=${term}`,
+        `${apiUrl}/api/get-psy-by-student/${studentId}/${
+          currentSession._id
+        }?examName=${encodeURIComponent(examName)}`,
         { headers }
       );
-      return { ...response.data };
+
+      console.log("API response status:", response.status);
+      console.log("Original data:", response.data);
+
+      // Filter for "SECOND TERM" exam only (just in case)
+      const filteredScores = response.data.marks.filter(
+        (mark) => mark.examName?.toUpperCase() === "FIRST TERM"
+      );
+
+      if (filteredScores.length === 0) {
+        console.warn("No first term scores found for the student");
+        alert("No first term scores available for this student."); // User-friendly alert
+        return []; // Return empty array
+      }
+
+      console.log("Filtered Scores:", filteredScores);
+      return filteredScores; // Return filtered scores
     } catch (error) {
-      console.error("Error fetching psychomotor data:", error);
-      throw new Error("Failed to fetch psychomotor data");
+      console.error("Error fetching student data:", error);
+      alert("An error occurred while fetching data. Please try again."); // Error message
+      return []; // Always return empty array in case of error
     }
   };
 
-  // Fetch school settings
-  // useEffect(() => {
-  //   const fetchSchoolSettings = async () => {
-  //     try {
-  //       const response = await axios.get(`${apiUrl}/api/setting`);
-  //       const { data } = response.data;
-
-  //       // Debug: Log school settings
-  //       console.log("School Settings:", data);
-
-  //       // Set the retrieved school settings to the state
-  //       setSchoolSettings(data);
-  //     } catch (error) {
-  //       console.error("Error fetching school settings:", error);
-  //     }
-  //   };
-
-  //   fetchSchoolSettings();
-  // }, [apiUrl]);
-
-  // useEffect(() => {
-  //   const fetchSchoolSettings = async () => {
-  //     try {
-  //       const response = await axios.get(`${apiUrl}/api/setting`, {
-  //         params: {
-  //           sessionId: currentSession._id,
-  //           term: "FIRST TERM", // Or dynamically determine term
-  //         },
-  //       });
-
-  //       const { data } = response.data;
-
-  //       setSchoolSettings(data);
-  //     } catch (error) {
-  //       console.error("Error fetching school settings:", error);
-  //     }
-  //   };
-
-  //   fetchSchoolSettings();
-  // }, [apiUrl, currentSession]);
   useEffect(() => {
     const fetchSchoolSettings = async () => {
       try {
@@ -316,50 +617,119 @@ const FirstTermRep = ({ studentId }) => {
 
     fetchSchoolSettings();
   }, [apiUrl, currentSession]);
-  // Fetch account settings
   useEffect(() => {
     const fetchAccountSettings = async () => {
       try {
         const response = await axios.get(`${apiUrl}/api/account-setting`);
         const { data } = response.data;
 
-        // Debug: Log account settings
-
-        // Set the retrieved account settings to the state
+        // Set the retrieved school settings to the state
         setAccountSettings(data);
       } catch (error) {
-        console.error("Error fetching account settings:", error);
+        console.error("Error fetching school settings:", error);
       }
     };
 
     fetchAccountSettings();
   }, [apiUrl]);
 
-  // Fetch psychomotor data
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     setLoading(true);
+
+  //     try {
+  //       const data = await fetchPsyData(studentId);
+  //       console.log("PsyData:", data); // Add this line to check the data
+  //       setPsyData(data);
+
+  //       setLoading(false);
+  //     } catch (error) {
+  //       setError("Failed to fetch student data");
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchData();
+
+  //   console.log("Student ID in useEffect:", studentId);
+  // }, [studentId, currentSession]);
+  // useEffect(() => {
+  //   console.log("useEffect triggered");
+  //   console.log("new studentId:", studentId);
+  //   console.log("new currentSession:", currentSession);
+
+  //   if (!studentId || !currentSession?._id) return;
+
+  //   const fetchData = async () => {
+  //     setLoading(true);
+  //     try {
+  //       const data = await fetchPsyData(studentId);
+  //       console.log("PsyData new fetched data:", data);
+  //       console.log("PsyData marks structure:", data.marks); // Check the marks specifically
+
+  //       setPsyData(data);
+  //     } catch (error) {
+  //       setError("Failed to fetch student data");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchData();
+  // }, [studentId, currentSession]);
+  // useEffect(() => {
+  //   console.log("useEffect triggered");
+  //   console.log("new studentId:", studentId);
+  //   console.log("new currentSession:", currentSession);
+
+  //   if (!studentId || !currentSession?._id) return;
+
+  //   const fetchData = async () => {
+  //     setLoading(true);
+  //     try {
+  //       const data = await fetchPsyData(studentId);
+  //       console.log("PsyData new fetched data:", data);
+  //       console.log("PsyData marks structure:", data[0]?.marks); // Access the first element and then marks
+
+  //       setPsyData(data[0]); // Set the first element to psyData
+  //     } catch (error) {
+  //       setError("Failed to fetch student data");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchData();
+  // }, [studentId, currentSession]);
   useEffect(() => {
+    console.log("useEffect triggered");
+    console.log("new studentId:", studentId);
+    console.log("new currentSession:", currentSession);
+
+    if (!studentId || !currentSession?._id) return;
+
     const fetchData = async () => {
       setLoading(true);
-
       try {
-        const fetchedPsyData = await fetchPsyData(studentId);
+        const data = await fetchPsyData(studentId);
+        console.log("PsyData new fetched data:", data);
 
-        // Debug: Log the fetched psychomotor data
+        // Assuming data is an array and the first element is the one you want
+        const studentData = data[0];
+        console.log("PsyData marks structure:", studentData?.marks); // Access marks directly from the first element
 
-        setPsyData(fetchedPsyData);
-
-        setLoading(false);
+        setPsyData(studentData); // Set the student data directly, not the array
+        // Log the entire psyData
+        console.log("PsyData after setting:", studentData); // Log the full object
       } catch (error) {
-        console.error("Error in fetchData for psychomotor data:", error);
-        setError("Failed to fetch psychomotor data");
+        setError("Failed to fetch student data");
+      } finally {
         setLoading(false);
       }
     };
 
     fetchData();
   }, [studentId, currentSession]);
-
-  // Log the main data fetched via useFetch
-  useEffect(() => {}, [data]);
 
   if (loading) {
     return <p>Loading...</p>;
@@ -368,8 +738,10 @@ const FirstTermRep = ({ studentId }) => {
   if (error) {
     return <p>{error}</p>;
   }
+  console.log("New Student Data:", studentData); // Log studentData to check its structure
 
   let totalMarksObtained = 0;
+
   if (studentData && Array.isArray(studentData)) {
     totalMarksObtained = studentData.reduce(
       (total, score) => total + (score.marksObtained || 0),
@@ -377,17 +749,45 @@ const FirstTermRep = ({ studentId }) => {
     );
   }
 
-  // Debug: Log totalMarksObtained
+  console.log("Total Marks Obtained:", totalMarksObtained); // Log totalMarksObtained
 
+  // const totalMarks = studentData?.scores
+  //   ? studentData.scores.length * 100 // Assuming 100 marks per subject
+  //   : 0;
   const totalMarks = studentData ? studentData.length * 100 : 0;
+
+  // const averageMarks = studentData?.scores
+  //   ? (
+  //       (studentData.scores.reduce(
+  //         (acc, score) => acc + (score.marksObtained || 0),
+  //         0
+  //       ) /
+  //         totalMarks) *
+  //       100
+  //     ).toFixed(1)
+  //   : 0;
+
   const averageMarks = totalMarks
     ? ((totalMarksObtained / totalMarks) * 100).toFixed(1)
     : 0;
 
+  // const calculateGrade = (comment) => {
+  //   // Use your existing gradeDefinitions to find a grade with a similar comment
+  //   const matchingGrade = gradeDefinitions.find((grade) =>
+  //     comment.toLowerCase().includes(grade.comment.toLowerCase())
+  //   );
+
+  //   // Return the grade if a matching grade is found
+  //   return matchingGrade ? matchingGrade.grade : "-";
+  // };
+
   const calculateGrade = (comment) => {
+    // Use your existing gradeDefinitions to find a grade with a similar comment
     const matchingGrade = gradeDefinitions.find((grade) =>
-      comment?.toLowerCase().includes(grade.comment.toLowerCase())
+      comment.toLowerCase().includes(grade.comment.toLowerCase())
     );
+
+    // Return the grade if a matching grade is found
     return matchingGrade ? matchingGrade.grade : "-";
   };
 
@@ -401,30 +801,61 @@ const FirstTermRep = ({ studentId }) => {
     };
 
     let totalGradeValues = 0;
+    let totalMarksObtained = 0;
     let totalSubjects = 0;
 
+    // Check if there are subjects with valid grades
     const subjectsWithGrades = studentData?.filter(
       (score) => score?.marksObtained !== undefined
     );
 
     if (!subjectsWithGrades || subjectsWithGrades.length === 0) {
+      console.log("No subjects with valid grades found.");
       return "N/A";
     }
 
     subjectsWithGrades.forEach((score) => {
       const gradeValue = gradeToValueMap[calculateGrade(score?.comment)];
+      const marksObtained = score?.marksObtained;
 
-      if (!isNaN(gradeValue) && gradeValue !== undefined) {
+      if (
+        !isNaN(gradeValue) &&
+        gradeValue !== undefined &&
+        !isNaN(marksObtained) &&
+        marksObtained !== undefined
+      ) {
+        console.log("Grade Value:", gradeValue);
+        console.log("Marks Obtained:", marksObtained);
+
         totalGradeValues += gradeValue;
+        totalMarksObtained += marksObtained;
         totalSubjects += 1;
       }
     });
 
-    if (totalGradeValues === 0 || totalSubjects === 0) {
+    console.log("Total Grade Values:", totalGradeValues);
+    console.log("Total Marks Obtained:", totalMarksObtained);
+    console.log("Total Subjects:", totalSubjects);
+
+    if (
+      totalMarksObtained === 0 ||
+      totalGradeValues === 0 ||
+      totalSubjects === 0
+    ) {
+      console.log("Unable to calculate average grade.");
       return "N/A";
     }
 
-    return (totalGradeValues / totalSubjects).toFixed(2);
+    const averageGradeValue = totalGradeValues / totalSubjects;
+
+    console.log("Average Grade Value:", averageGradeValue);
+
+    if (isNaN(averageGradeValue)) {
+      console.log("Average grade value is NaN.");
+      return "N/A";
+    }
+
+    return averageGradeValue.toFixed(2);
   };
 
   return (
@@ -432,7 +863,7 @@ const FirstTermRep = ({ studentId }) => {
       <ContentBox className="analytics">
         <Box width="100%" overflow="auto">
           <button onClick={handlePrint}>Print this out!</button>
-          <div className="container" ref={componentRef}>
+          <div className="comp" ref={componentRef}>
             <div
               className="header"
               style={{
@@ -511,7 +942,7 @@ const FirstTermRep = ({ studentId }) => {
                       textAlign: "center",
                     }}
                   >
-                    {Array.isArray(data) && data.length > 0
+                    {data && Array.isArray(data) && data.length > 0
                       ? data[0]?.studentName || "Name not available"
                       : "Data format unexpected"}
                   </span>
@@ -529,7 +960,9 @@ const FirstTermRep = ({ studentId }) => {
                       textAlign: "center",
                     }}
                   >
-                    {accountSettings.sessionStart}-{accountSettings.sessionEnd}
+                    {currentSession?.name
+                      ? `${currentSession.name}`
+                      : "No active session"}
                   </p>
                 </div>
                 <div style={{ marginBottom: "20px" }}>
@@ -545,7 +978,7 @@ const FirstTermRep = ({ studentId }) => {
                       textAlign: "center",
                     }}
                   >
-                    Mrs Adebisi Emmanuel
+                    {data?.[0]?.teacherName || "Teacher not available"}
                   </span>
                 </div>
               </div>
@@ -565,11 +998,7 @@ const FirstTermRep = ({ studentId }) => {
                       marginLeft: "30px",
                       textAlign: "center",
                     }}
-                    value={
-                      data && data.length > 0
-                        ? data[0]?.AdmNo || "ID not available"
-                        : "Data format unexpected"
-                    }
+                    value={data?.[0]?.AdmNo || "ID not available"}
                     readOnly
                   />
                 </p>
@@ -825,93 +1254,99 @@ const FirstTermRep = ({ studentId }) => {
               </table>
             </div>
 
-            {/* First Table */}
-            <table className="table" id="customers" style={{ width: "100%" }}>
-              <thead>
-                <tr>
-                  <th>S/No</th>
-                  <th>Subject</th>
-                  <th>Test</th>
-                  <th>Exam</th>
-                  <th>Obtained Marks</th>
-                  <th>Position</th>
-                  <th>Grade</th>
-                  <th>Remark</th>
-                </tr>
-              </thead>
-              <tbody style={{ width: "100% !important" }}>
-                {/* Check if there's data and map through the scores */}
-                {studentData && studentData.length > 0 ? (
-                  studentData.map((score, index) => (
-                    <tr key={index}>
-                      <td>{index + 1}</td> {/* Serial number */}
-                      <td>{score?.subjectName || "-"}</td> {/* Subject Name */}
-                      <td>
-                        {score?.testscore !== undefined ? score.testscore : "-"}
-                      </td>{" "}
-                      {/* Test Score */}
-                      <td>
-                        {score?.examscore !== undefined ? score.examscore : "-"}
-                      </td>{" "}
-                      {/* Exam Score */}
-                      <td>
-                        {score?.marksObtained !== undefined
-                          ? score.marksObtained
-                          : "-"}
-                      </td>{" "}
-                      {/* Obtained Marks */}
-                      <td>
-                        {score?.position !== undefined ? score.position : "-"}
-                      </td>{" "}
-                      {/* Position */}
-                      <td>{calculateGrade(score?.comment) || "-"}</td>{" "}
-                      {/* Grade */}
-                      <td>{score?.comment || "-"}</td> {/* Comment/Remark */}
-                    </tr>
-                  ))
-                ) : (
-                  // Fallback for when no data is available
+            <div className="tables-container flex">
+              {/* First Table */}
+              <table className="table" id="customers" style={{ width: "100%" }}>
+                <thead>
                   <tr>
-                    <td colSpan="8">No data available for this term.</td>
+                    <th>S/No</th>
+                    <th>Subject</th>
+                    <th>Test</th>
+                    <th>Exam</th>
+                    <th>Obtained Marks</th>
+                    <th>Position</th>
+                    <th>Grade</th>
+                    <th>Remark</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody style={{ width: "100% !important" }}>
+                  {/* Check if there's data and map through the scores */}
+                  {studentData && studentData.length > 0 ? (
+                    studentData.map((score, index) => (
+                      <tr key={index}>
+                        <td>{index + 1}</td> {/* Serial number */}
+                        <td>{score?.subjectName || "-"}</td>{" "}
+                        {/* Subject Name */}
+                        <td>
+                          {score?.testscore !== undefined
+                            ? score.testscore
+                            : "-"}
+                        </td>{" "}
+                        {/* Test Score */}
+                        <td>
+                          {score?.examscore !== undefined
+                            ? score.examscore
+                            : "-"}
+                        </td>{" "}
+                        {/* Exam Score */}
+                        <td>
+                          {score?.marksObtained !== undefined
+                            ? score.marksObtained
+                            : "-"}
+                        </td>{" "}
+                        {/* Obtained Marks */}
+                        <td>
+                          {score?.position !== undefined ? score.position : "-"}
+                        </td>{" "}
+                        {/* Position */}
+                        <td>{calculateGrade(score?.comment) || "-"}</td>{" "}
+                        {/* Grade */}
+                        <td>{score?.comment || "-"}</td> {/* Comment/Remark */}
+                      </tr>
+                    ))
+                  ) : (
+                    // Fallback for when no data is available
+                    <tr>
+                      <td colSpan="8">No data available for this term.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
 
-            {/* Second Table */}
-            <table
-              className="table second-sub-table"
-              id="customersreport"
-              style={{ width: "100%" }}
-            >
-              <thead>
-                <tr>
-                  <th
-                    colSpan="3"
-                    style={{ textAlign: "center", fontSize: "18px" }}
-                  >
-                    AFFECTIVE AND PSYCHOMOTOR REPORT
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th></th>
-                  <th>Work Habits</th>
-                  <th>RATINGS</th>
-                </tr>
-                {psyData?.scores?.length > 0 ? (
-                  psyData.scores.map((score, index) => (
-                    <React.Fragment key={index}>
+              {/* Second Table */}
+              <table
+                className="table second-sub-table"
+                id="customersreport"
+                style={{ width: "100%" }}
+              >
+                <thead>
+                  <tr>
+                    <th
+                      colSpan="3"
+                      style={{ textAlign: "center", fontSize: "18px" }}
+                    >
+                      AFFECTIVE AND PSYCHOMOTOR REPORT
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th></th>
+                    <th>Work Habits</th>
+                    <th>RATINGS</th>
+                  </tr>
+
+                  {psyData ? (
+                    <React.Fragment>
                       <tr>
-                        <td>{index + 1}</td>
+                        <td>1</td>
                         <td>Following Instruction</td>
-                        <td>{score?.instruction || "0"}</td>
+                        <td>{psyData?.instruction || "0"}</td>
                       </tr>
                       <tr>
-                        <td>{index + 2}</td>
+                        <td>2</td>
                         <td>Working Independently</td>
-                        <td>{score?.independently || "0"}</td>
+                        <td>{psyData?.independently || "0"}</td>
                       </tr>
                       <tr>
                         <th></th>
@@ -921,7 +1356,7 @@ const FirstTermRep = ({ studentId }) => {
                       <tr>
                         <td>1</td>
                         <td>Punctuality</td>
-                        <td>{score?.punctuality || "0"}</td>
+                        <td>{psyData?.punctuality || "0"}</td>
                       </tr>
                       <tr>
                         <th></th>
@@ -931,22 +1366,22 @@ const FirstTermRep = ({ studentId }) => {
                       <tr>
                         <td>1</td>
                         <td>Talking</td>
-                        <td>{score?.talking || "0"}</td>
+                        <td>{psyData?.talking || "0"}</td>
                       </tr>
                       <tr>
                         <td>2</td>
                         <td>Eye Contact</td>
-                        <td>{score?.eyecontact || "0"}</td>
+                        <td>{psyData?.eyecontact || "0"}</td>
                       </tr>
                     </React.Fragment>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="3">No psychomotor data available</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    <tr>
+                      <td colSpan="2">No Psychomotor available</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
 
             <div style={{ color: "#042954", fontSize: "16px" }}>
               KEY TO GRADES A (DISTINCTION)=70% &amp; ABOVE , C (CREDIT)=55-69%
@@ -955,22 +1390,25 @@ const FirstTermRep = ({ studentId }) => {
             <div className="remarksbox" style={{ padding: "10px 0" }}>
               <table className="table">
                 <tbody>
-                  <tr>
-                    <th>CLASS TEACHER'S REMARK</th>
-                    {psyData?.scores?.map((score, index) => (
-                      <td key={index} colSpan="2">
-                        {score.remarks || "No remarks"}
-                      </td>
-                    ))}
-                  </tr>
-                  <tr>
-                    <th>PRINCIPAL'S REMARK</th>
-                    {psyData?.scores?.map((score, index) => (
-                      <td key={index} colSpan="2">
-                        {score.premarks || "No principal remarks"}
-                      </td>
-                    ))}
-                  </tr>
+                  {psyData ? (
+                    <>
+                      <tr>
+                        <th>CLASS TEACHER'S REMARK</th>
+                        <td colSpan="2">{psyData?.remarks || "No remarks"}</td>
+                      </tr>
+
+                      <tr>
+                        <th>PRINCIPAL'S REMARK</th>
+                        <td colSpan="2">
+                          {psyData?.premarks || "No principal remarks"}
+                        </td>
+                      </tr>
+                    </>
+                  ) : (
+                    <tr>
+                      <td colSpan="2">No data available</td>
+                    </tr>
+                  )}
                   <tr>
                     <th>PRINCIPAL'S NAME</th>
                     <td>{schoolSettings?.principalName || "N/A"}</td>
