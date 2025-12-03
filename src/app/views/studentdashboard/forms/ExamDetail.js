@@ -499,7 +499,7 @@ const ExamDetail = () => {
                         <Typography variant="h6">{`Question ${index + 1}:`}</Typography>
               <div
                 dangerouslySetInnerHTML={{ __html: question.questionTitle }}
-                style={{ overflow: "hidden",   maxHeight: "2400px"  }}
+                style={{ overflow: "hidden",   maxHeight: "3400px"  }}
                 className="student-question-content"
               />
 
