@@ -26,14 +26,12 @@ import {
 } from "@mui/material";
 import RowCards from "../shared/RowCards";
 import { Breadcrumb } from "../../../../app/components";
-
 import axios from "axios";
 import EditIcon from "@mui/icons-material/Edit"; // Import the Edit icon
 import DeleteIcon from "@mui/icons-material/Delete";
 
 import useFetch from "../../../../hooks/useFetch";
 import FormDialog4 from "../../../../app/views/material-kit/dialog/FormDialog4";
-import EditSub12 from "../EditSub12";
 import EditSub14 from "./EditSub14";
 import { SessionContext } from "../../../components/MatxLayout/Layout1/SessionContext";
 const ContentBox = styled("div")(({ theme }) => ({
@@ -41,7 +39,7 @@ const ContentBox = styled("div")(({ theme }) => ({
   [theme.breakpoints.down("sm")]: { margin: "16px" },
 }));
 
-const Sub12 = () => {
+const Sub11 = () => {
   const { currentSession } = useContext(SessionContext);
 
   const className = "S.S.3.C"; // Specify the class name here
@@ -49,14 +47,14 @@ const Sub12 = () => {
   const { data, loading, fetchedData, error, reFetch } = useFetch(
     currentSession ? `/get-subject/${className}/${currentSession._id}` : null
   );
+
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
   const { palette } = useTheme();
-
-  const [tableData, setTableData] = useState([]);
-
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [tableData, setTableData] = useState([]);
+
   const [anchorElMap, setAnchorElMap] = useState({});
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState(null); // State to hold selected subject data
@@ -71,14 +69,6 @@ const Sub12 = () => {
     setAnchorElMap((prev) => ({
       ...prev,
       [examId]: event.currentTarget,
-    }));
-  };
-
-  // Function to handle closing the context menu for a specific exam
-  const handleCloseMenu = (examId) => {
-    setAnchorElMap((prev) => ({
-      ...prev,
-      [examId]: null,
     }));
   };
   const handleOpenEditDialog = (subject) => {
@@ -112,6 +102,14 @@ const Sub12 = () => {
       console.error("Error updating Subject:", error);
     }
   };
+  // Function to handle closing the context menu for a specific exam
+  const handleCloseMenu = (examId) => {
+    setAnchorElMap((prev) => ({
+      ...prev,
+      [examId]: null,
+    }));
+  };
+
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(+event.target.value);
     setPage(0);
@@ -151,7 +149,6 @@ const Sub12 = () => {
     setTableData([...data, newSubject]);
     reFetch(); // Trigger data refetch after updating tableData1
   };
-
   return (
     <Fragment>
       <ContentBox className="analytics">
@@ -317,4 +314,4 @@ const Sub12 = () => {
   );
 };
 
-export default Sub12;
+export default Sub11;

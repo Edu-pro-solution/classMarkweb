@@ -458,19 +458,24 @@ const quillFormats = [
               />
             </div>
           </div>
-          <div className="form-group">
-            <label className="col-sm-3 control-label">Question Title</label>
-            <div className="col-sm-8">
-              <textarea
-                name="question_title"
-                className="form-control"
-                rows="4"
-                value={questionTitle}
-                onChange={(e) => setQuestionTitle(e.target.value)}
-                required
-              />
-            </div>
-          </div>
+<div className="form-group">
+  <label className="col-sm-3 control-label">Question Title</label>
+
+  <div className="col-sm-8">
+    <div style={{ border: "1px solid #ccc", borderRadius: "4px" }}>
+      <ReactQuill
+        theme="snow"
+        value={questionTitle}
+        onChange={setQuestionTitle}
+        modules={quillModules}
+        formats={quillFormats}
+        style={{
+          height: "580px",
+        }}
+      />
+    </div>
+  </div>
+</div>
           <div className="form-group">
             <label className="col-sm-3 control-label">Answer</label>
             <div className="col-sm-8">
@@ -541,19 +546,24 @@ const quillFormats = [
               />
             </div>
           </div>
-          <div className="form-group">
-            <label className="col-sm-3 control-label">Question Title</label>
-            <div className="col-sm-8">
-              <textarea
-                name="question_title"
-                className="form-control"
-                rows="4"
-                value={questionTitle}
-                onChange={(e) => setQuestionTitle(e.target.value)}
-                required
-              />
-            </div>
-          </div>
+  <div className="form-group">
+  <label className="col-sm-3 control-label">Question Title</label>
+
+  <div className="col-sm-8">
+    <div style={{ border: "1px solid #ccc", borderRadius: "4px" }}>
+      <ReactQuill
+        theme="snow"
+        value={questionTitle}
+        onChange={setQuestionTitle}
+        modules={quillModules}
+        formats={quillFormats}
+        style={{
+          height: "580px",
+        }}
+      />
+    </div>
+  </div>
+</div>
           <div className="form-group">
             <label className="col-sm-3 control-label">Possible Answers</label>
             <p style={{ color: "black" }}>
@@ -623,19 +633,24 @@ const quillFormats = [
               />
             </div>
           </div>
-          <div className="form-group">
-            <label className="col-sm-3 control-label">Question Title</label>
-            <div className="col-sm-8">
-              <textarea
-                name="question_title"
-                className="form-control"
-                rows="4"
-                value={questionTitle}
-                onChange={(e) => setQuestionTitle(e.target.value)}
-                required
-              />
-            </div>
-          </div>
+      <div className="form-group">
+  <label className="col-sm-3 control-label">Question Title</label>
+
+  <div className="col-sm-8">
+    <div style={{ border: "1px solid #ccc", borderRadius: "4px" }}>
+      <ReactQuill
+        theme="snow"
+        value={questionTitle}
+        onChange={setQuestionTitle}
+        modules={quillModules}
+        formats={quillFormats}
+        style={{
+          height: "580px",
+        }}
+      />
+    </div>
+  </div>
+</div>
           {/*}   <div className="form-group">
             <label className="col-sm-3 control-label">Onscreen Marking</label>
             <div className="col-sm-8">
