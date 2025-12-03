@@ -491,9 +491,18 @@ const ExamDetail = () => {
               <Grid item xs={12} key={question._id}>
                 <Card>
                   <CardContent>
-                    <Typography variant="h6">{`Question ${index + 1}: ${
+                    {/* <Typography variant="h6">{`Question ${index + 1}: ${
                       question.questionTitle
-                    }`}</Typography>
+                    }`}</Typography> */}
+
+
+                        <Typography variant="h6">{`Question ${index + 1}:`}</Typography>
+              <div
+                dangerouslySetInnerHTML={{ __html: question.questionTitle }}
+                style={{ overflow: "hidden" }}
+                className="student-question-content"
+              />
+
                     {question.options && question.options.length > 0 && (
                       <div>
                         <RadioGroup

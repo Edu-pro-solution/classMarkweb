@@ -22,6 +22,14 @@ import useFetch from "../../../../hooks/useFetch";
 import EditQuestionModal from "./EditQuestionModal";
 import { SessionContext } from "../../../components/MatxLayout/Layout1/SessionContext";
 
+import ReactQuill, { Quill } from "react-quill";
+
+import "react-quill/dist/quill.snow.css";
+
+import ImageResize from "quill-image-resize-module-react";
+import { ImageDrop } from "quill-image-drop-module";
+
+
 const ManSin = () => {
   const location = useLocation();
   const parts = location.pathname.split("/");
@@ -38,6 +46,8 @@ const ManSin = () => {
   const [questionType, setQuestionType] = useState("");
   const apiUrl = process.env.REACT_APP_API_URL;
 
+Quill.register("modules/imageResize", ImageResize);
+Quill.register("modules/imageDrop", ImageDrop);
   // State for total marks
   const [totalMark, setTotalMark] = useState(0);
 
@@ -81,6 +91,53 @@ const ManSin = () => {
 
     setQuestions(updatedQuestions);
   };
+
+const quillModules = {
+  toolbar: [
+    [{ font: [] }],
+    [{ size: [] }],
+    ["bold", "italic", "underline", "strike"],
+    [{ color: [] }, { background: [] }],
+    [{ script: "sub" }, { script: "super" }],
+    [{ header: "1" }, { header: "2" }, "blockquote", "code-block"],
+    [{ list: "ordered" }, { list: "bullet" }],
+    [{ indent: "-1" }, { indent: "+1" }],
+    [{ align: [] }],
+    ["link", "image", "video"],
+    ["clean"],
+  ],
+
+  imageResize: {
+    parchment: Quill.import("parchment"),
+    modules: ["Resize", "DisplaySize", "Toolbar"],  
+  },
+
+  imageDrop: true,
+};
+
+
+const quillFormats = [
+  "font",
+  "size",
+  "bold",
+  "italic",
+  "underline",
+  "strike",
+  "color",
+  "background",
+  "script",
+  "header",
+  "blockquote",
+  "code-block",
+  "list",
+  "bullet",
+  "indent",
+  "align",
+  "link",
+  "image",
+  "video",
+];
+
   // Function to calculate total marks
   const calculateTotalMarks = () => {
     // Use map to extract the mark as an integer and then sum them up
@@ -178,60 +235,6 @@ const ManSin = () => {
     fetchQuestions();
   }, [id]);
 
-  // const submitQuestion = async () => {
-  //   try {
-  //     // Fetch the JWT token from wherever you've stored it (e.g., local storage)
-  //     const token = localStorage.getItem("jwtToken");
-
-  //     // Construct the questionData object based on questionType
-  //     const questionData = {
-  //       questionType: questionType,
-  //       // type: questionType,
-  //       mark, // Set the mark
-  //       // question_title: questionTitle, // Set the question title
-  //       questionTitle,
-  //       examId: id, // Set the examId
-  //       possibleAnswers: possibleAnswers,
-
-  //     };
-
-  //     if (questionType === "multiple_choice") {
-  //       // For multiple-choice questions, add options
-  //       questionData.options = optionFields.map((option, i) => ({
-  //         option: document.getElementById(`option${i + 1}`).value,
-  //         isCorrect: document.getElementById(`correct${i + 1}`).checked,
-  //       }));
-  //     } else if (questionType === "true_false") {
-  //       // For True/False questions, add the correctAnswer
-  //       questionData.correctAnswer = document.querySelector(
-  //         'input[name="answer"]:checked'
-  //       ).value;
-  //     } else if (questionType === "fill_in_the_blanks") {
-  //       // Additional logic for fill in the blanks questions
-  //       questionData.possible_answers = possibleAnswers;
-  //     }
-
-  //     const response = await fetch(`${apiUrl}/api/questions`, {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         Authorization: `Bearer ${token}`, // Include the JWT token in the headers
-  //       },
-  //       body: JSON.stringify(questionData),
-  //     });
-
-  //     if (response.ok) {
-  //       // Question submitted successfully, you can handle the response here
-  //       console.log("Question submitted successfully");
-  //       addQuestion(questionData);
-  //     } else {
-  //       // Handle errors
-  //       console.error("Failed to submit the question");
-  //     }
-  //   } catch (error) {
-  //     console.error("An error occurred while submitting the question:", error);
-  //   }
-  // };
   const submitQuestion = async () => {
     try {
       // Fetch the JWT token from wherever you've stored it (e.g., local storage)
@@ -350,19 +353,38 @@ const ManSin = () => {
               />
             </div>
           </div>
-          <div className="form-group">
+          {/* <div className="form-group">
             <label className="col-sm-3 control-label">Question Title</label>
             <div className="col-sm-8">
               <textarea
                 name="question_title"
                 className="form-control"
-                rows="4" // Adjust the number of rows as needed
-                value={questionTitle} // Use the questionTitle state
-                onChange={(e) => setQuestionTitle(e.target.value)} // Update the questionTitle state
+                rows="4" 
+                value={questionTitle}
+                onChange={(e) => setQuestionTitle(e.target.value)} 
                 required
               />
             </div>
-          </div>
+          </div> */}
+<div className="form-group">
+  <label className="col-sm-3 control-label">Question Title</label>
+
+  <div className="col-sm-8">
+    <div style={{ border: "1px solid #ccc", borderRadius: "4px" }}>
+      <ReactQuill
+        theme="snow"
+        value={questionTitle}
+        onChange={setQuestionTitle}
+        modules={quillModules}
+        formats={quillFormats}
+        style={{
+          height: "580px",
+        }}
+      />
+    </div>
+  </div>
+</div>
+
 
           <div className="form-group">
             <label className="col-sm-3 control-label">Number of Options</label>
@@ -706,9 +728,22 @@ const ManSin = () => {
                         >
                           {question.questionType}
                         </TableCell>
-                        <TableCell style={{ whiteSpace: "normal" }}>
-                          {question.questionTitle}
-                        </TableCell>
+                      <TableCell style={{ whiteSpace: "normal" }}>
+  <div
+    dangerouslySetInnerHTML={{ __html: question.questionTitle }}
+    style={{ overflow: "hidden" }}
+  />
+  <style>
+    {`
+      td img {
+        max-width: 150px;   /* Adjust width as needed */
+        max-height: 100px;  /* Adjust height as needed */
+        object-fit: contain;
+      }
+    `}
+  </style>
+</TableCell>
+
                         <TableCell style={{ textAlign: "center" }}>
                           {question.mark}
                         </TableCell>

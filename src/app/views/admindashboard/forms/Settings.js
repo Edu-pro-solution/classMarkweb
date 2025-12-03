@@ -20,7 +20,7 @@ import {
   Radio,
 } from "@mui/material";
 import { Span } from "../../../../app/components/Typography";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import axios from "axios";
 
@@ -29,6 +29,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 import { TextValidator, ValidatorForm } from "react-material-ui-form-validator";
 import { Navigate, useNavigate } from "react-router-dom";
+import { SessionContext } from "../../../components/MatxLayout/Layout1/SessionContext";
 const Container = styled("div")(({ theme }) => ({
   margin: "30px",
   [theme.breakpoints.down("sm")]: { margin: "16px" },
@@ -57,6 +58,7 @@ const Settings = () => {
     sessionEnd: "",
     schoolLogo: null,
   });
+const { currentSession } = useContext(SessionContext);
 
   const apiUrl = process.env.REACT_APP_API_URL;
   useEffect(() => {
@@ -85,7 +87,12 @@ const Settings = () => {
     formDataToSend.append("sessionStart", formData.sessionStart); // Adjusted field name
     formDataToSend.append("sessionEnd", formData.sessionEnd); // Adjusted field name
     console.log("FormData before append:", formDataToSend);
-
+  if (currentSession?._id) {
+    formDataToSend.append("session", currentSession._id);
+  } else {
+    toast.error("No active session found!");
+    return;
+  }
     if (formData.schoolLogo) {
       formDataToSend.append("schoolLogo", formData.schoolLogo);
     }
