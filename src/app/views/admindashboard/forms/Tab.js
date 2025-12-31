@@ -183,81 +183,86 @@ const Tab = () => {
   //     console.error("Error fetching student data:", error);
   //   }
   // };
-  const handleManageMarkClick = async () => {
+
+const fetchAllScoresForClass = async (examId, sessionId, classname) => {
   try {
     const token = localStorage.getItem("jwtToken");
     const headers = new Headers();
     headers.append("Authorization", `Bearer ${token}`);
 
-    // Fetch students for the selected class and session
     const response = await fetch(
-      `${apiUrl}/api/student/${selectedClass}/${currentSession._id}`,
+      `${apiUrl}/api/get-all-scored/${examId}/${sessionId}/${classname}`,
       { headers }
     );
 
     if (!response.ok) {
-      throw new Error("Failed to fetch student data");
+      console.error("Failed to fetch scores. Response details:", response);
+      throw new Error("Failed to fetch scores");
     }
 
-    const students = await response.json();
+    const data = await response.json();
+    return data; // data contains { totalStudents, totalSubjects, results: [...] }
+  } catch (error) {
+    console.error("Error fetching scores:", error);
+    return null;
+  }
+};
 
-    if (!students || students.length === 0) {
-      console.warn("No students found for the selected class.");
+  const handleManageMarkClick = async () => {
+  try {
+    if (!selectedClass || !selectedExam || !currentSession) return;
+
+    // 1️⃣ Fetch all scores for the class/session
+    const scoreData = await fetchAllScoresForClass(
+      selectedExam,
+      currentSession._id,
+      selectedClass
+    );
+
+    if (!scoreData || !scoreData.results || scoreData.results.length === 0) {
       setStudentData([]);
       setShowMarkManagement(false);
       return;
     }
 
-    // Optionally, select the first student
-    setSelectedStudentId(students[0]._id);
+    // 2️⃣ Extract subjects
+    const subjects = scoreData.results.map((sub) => ({
+      subjectId: sub.subjectId,
+      name: sub.subjectName
+    }));
+    setSubjectData(subjects);
 
-    // Fetch existing scores for the selected exam and subject
-    const existingData = await fetchStudentData(
-      selectedExam,
-      subjectIdLookup[selectedSubject]
-    );
+    // 3️⃣ Prepare student data
+    const students = {}; // key = studentId, value = student info + scores
 
-    console.log("Response from fetchStudentData:", existingData);
+    scoreData.results.forEach((subject) => {
+      subject.scores.forEach((studentScore) => {
+        if (!students[studentScore.studentId]) {
+          students[studentScore.studentId] = {
+            studentId: studentScore.studentId,
+            studentName: studentScore.studentName,
+            subjects: []
+          };
+        }
 
-    // Map students to include subjects and their scores
-    const initialState = students.map((student) => {
-      // Filter scores for this student
-      const studentScores = existingData.scores.filter(
-        (score) => score.studentId && score.studentId._id === student._id
-      );
-
-      // Map each subject to its score
-      const subjectsWithScores = subjectData.map((subj) => {
-        const scoreForSubject = studentScores.find(
-          (s) => s.subjectId === subj._id
-        ) || {};
-
-        const test = scoreForSubject.testscore || 0;
-        const exam = scoreForSubject.examscore || 0;
-
-        return {
-          subjectId: subj._id,
-          test,
-          exam,
-          total: test + exam,
-        };
+        students[studentScore.studentId].subjects.push({
+          subjectId: subject.subjectId,
+          test: studentScore.testscore,
+          exam: studentScore.examscore,
+          total: studentScore.testscore + studentScore.examscore,
+          comment: studentScore.comment || ""
+        });
       });
-
-      return {
-        studentId: student._id,
-        studentName: student.studentName,
-        subjects: subjectsWithScores,
-      };
     });
 
-    console.log("Initial state with subjects:", initialState);
-
-    setStudentData(initialState);
+    setStudentData(Object.values(students));
     setShowMarkManagement(true);
+
   } catch (error) {
-    console.error("Error fetching student data:", error);
+    console.error("Error managing marks:", error);
   }
 };
+
 
 const handleSubjectScoreChange = (
   studentIndex,
@@ -359,6 +364,7 @@ const handleSubjectScoreChange = (
   const handleSubjectChange = (event) => {
     setSelectedSubject(event.target.value);
   };
+
 
   const handleSaveChanges = async () => {
     try {
