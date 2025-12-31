@@ -75,7 +75,7 @@ const Tab = () => {
   const [subjectIdLookup, setSubjectIdLookup] = useState({});
   const [showMarkManagement, setShowMarkManagement] = useState(false);
 
-
+  const subjects = ["English", "Math", "Crs", "Basic Tech", "Business Studies"];
   const [students, setStudents] = useState(studentData);
 
 
@@ -110,40 +110,79 @@ const Tab = () => {
     }
   };
 
-const handleManageMarkClick = async () => {
-  try {
-    const token = localStorage.getItem("jwtToken");
-    const headers = new Headers();
-    headers.append("Authorization", `Bearer ${token}`);
+  const handleManageMarkClick = async () => {
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const headers = new Headers();
+      headers.append("Authorization", `Bearer ${token}`);
 
-    const response = await fetch(
-      `${apiUrl}/api/student/${selectedClass}/${currentSession._id}`,
-      { headers }
-    );
+      const response = await fetch(`${apiUrl}/api/student/${selectedClass}/${currentSession._id}`, {
+        headers,
+      });
 
-    if (!response.ok) throw new Error("Failed to fetch students");
+      if (!response.ok) {
+        throw new Error("Failed to fetch student data");
+      }
 
-    const students = await response.json();
+      const students = await response.json();
 
-    const initializedStudents = students.map((student) => ({
-      studentId: student._id,
-      studentName: student.studentName,
-      subjects: subjectData.map((subject) => ({
-        subjectId: subject._id,
-        subjectName: subject.name,
-        test: 0,
-        exam: 0,
-        total: 0,
-      })),
-    }));
+      // Handle the case where no students are found
+      if (students.length === 0) {
+        console.warn("No students found for the selected class.");
+        // Proceed with the logic for initializing the state, etc.
+        // You might want to show a message to the user or take appropriate action.
+      } else {
+        // Assuming you want to pick the first student for now
+        const firstStudentId = students[0]._id;
+        setSelectedStudentId(firstStudentId);
 
-    setStudentData(initializedStudents);
-    setShowMarkManagement(true);
-  } catch (err) {
-    console.error(err);
-  }
-};
+        const existingData = await fetchStudentData(
+          selectedExam,
+          subjectIdLookup[selectedSubject]
+        );
 
+        console.log("Response from fetchStudentData:", existingData);
+        console.log("Existing scores:", existingData.scores);
+
+        // Ensure that the scores are properly set in the initial state
+        const initialState = students.map((student) => {
+          const studentScore = existingData.scores.find(
+            (score) => score.studentId && score.studentId._id === student._id
+          );
+
+          console.log(`Student ${student._id} - Existing Score:`, studentScore);
+
+          const defaultTestScore = studentScore
+            ? studentScore.testscore !== undefined
+              ? studentScore.testscore
+              : 0
+            : 0;
+
+          const defaultExamScore = studentScore
+            ? studentScore.examscore !== undefined
+              ? studentScore.examscore
+              : 0
+            : 0;
+
+          return {
+            studentId: student._id,
+            studentName: student.studentName,
+            testscore: defaultTestScore,
+            examscore: defaultExamScore,
+            marksObtained: defaultTestScore + defaultExamScore,
+            comment: studentScore ? studentScore.comment || "" : "",
+          };
+        });
+
+        console.log("Initial state:", initialState);
+
+        setStudentData(initialState);
+        setShowMarkManagement(true);
+      }
+    } catch (error) {
+      console.error("Error fetching student data:", error);
+    }
+  };
 const handleSubjectScoreChange = (
   studentIndex,
   subjectId,
@@ -468,8 +507,7 @@ return (
             >
               <Table
                 sx={{
-           minWidth: subjectData.length * 240 + 300,
-// 🔥 dynamic width
+                  minWidth: subjects.length * 240 + 300, // 🔥 dynamic width
                   borderCollapse: "collapse",
 
                   "& th, & td": {
@@ -510,12 +548,11 @@ return (
 </TableCell>
 
 
-                  {subjectData.map((subject) => (
-  <TableCell key={subject._id} colSpan={3}>
-    {subject.name}
-  </TableCell>
-))}
-
+                    {subjects.map((subj) => (
+                      <TableCell key={subj} colSpan={3}>
+                        {subj}
+                      </TableCell>
+                    ))}
 
                     <TableCell rowSpan={2} sx={{ minWidth: "90px" }}>
                       Total
@@ -526,14 +563,13 @@ return (
                   </TableRow>
 
                   <TableRow>
-                {subjectData.map((subject) => (
-  <React.Fragment key={subject._id}>
-    <TableCell>Test</TableCell>
-    <TableCell>Exam</TableCell>
-    <TableCell>Total</TableCell>
-  </React.Fragment>
-))}
-
+                    {subjects.map((subj) => (
+                      <React.Fragment key={subj}>
+                        <TableCell>Test</TableCell>
+                        <TableCell>Exam</TableCell>
+                        <TableCell>Total</TableCell>
+                      </React.Fragment>
+                    ))}
                   </TableRow>
                 </TableHead>
 
@@ -551,49 +587,55 @@ return (
                         >
                           {student.studentName}
                         </TableCell>
-{student.subjects.map((subj) => (
-  <React.Fragment key={subj.subjectId}>
-    <TableCell>
-      <input
-        type="number"
-        value={subj.test}
-        onChange={(e) =>
-          handleSubjectScoreChange(
-            idx,
-            subj.subjectId,
-            "test",
-            Number(e.target.value)
-          )
-        }
-      />
-    </TableCell>
 
-    <TableCell>
-      <input
-        type="number"
-        value={subj.exam}
-        onChange={(e) =>
-          handleSubjectScoreChange(
-            idx,
-            subj.subjectId,
-            "exam",
-            Number(e.target.value)
-          )
-        }
-      />
-    </TableCell>
+                        {subjects.map((subj, sIdx) => {
+                          const test =
+                            Number(student.scores?.[subj]?.test) || 0;
+                          const exam =
+                            Number(student.scores?.[subj]?.exam) || 0;
+                          const total = test + exam;
+                          overallTotal += total;
 
-    <TableCell>{subj.total}</TableCell>
-  </React.Fragment>
-))}
-
+                          return (
+                            <React.Fragment key={sIdx}>
+                              <TableCell>
+                                <input
+                                  type="number"
+                                  value={test}
+                                  onChange={(e) =>
+                                    handleSubjectScoreChange(
+                                      idx,
+                                      subj,
+                                      "test",
+                                      Number(e.target.value)
+                                    )
+                                  }
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <input
+                                  type="number"
+                                  value={exam}
+                                  onChange={(e) =>
+                                    handleSubjectScoreChange(
+                                      idx,
+                                      subj,
+                                      "exam",
+                                      Number(e.target.value)
+                                    )
+                                  }
+                                />
+                              </TableCell>
+                              <TableCell>{total}</TableCell>
+                            </React.Fragment>
+                          );
+                        })}
 
                         <TableCell sx={{ fontWeight: "bold" }}>
                           {overallTotal}
                         </TableCell>
                         <TableCell sx={{ fontWeight: "bold" }}>
-                        (overallTotal / subjectData.length).toFixed(2)
-
+                          {(overallTotal / subjects.length).toFixed(2)}
                         </TableCell>
                       </TableRow>
                     );
