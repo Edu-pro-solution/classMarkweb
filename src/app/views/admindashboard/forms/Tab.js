@@ -106,7 +106,7 @@ const Tab = () => {
       return data;
     } catch (error) {
       console.error("Error fetching student data:", error);
-      return { scores: [] }; // Return empty array if there's an error
+      return { scores: [] }; // 
     }
   };
 
