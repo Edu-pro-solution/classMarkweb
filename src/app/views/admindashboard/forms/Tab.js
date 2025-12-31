@@ -1,6 +1,8 @@
 import { DatePicker } from "@mui/lab";
 import AdapterDateFns from "@mui/lab/AdapterDateFns";
 import { Stack } from "@mui/material";
+import React from "react";
+
 import { Box } from "@mui/system";
 import { Breadcrumb, SimpleCard } from "../../../../app/components";
 import axios from "axios";
@@ -73,7 +75,7 @@ const Tab = () => {
   const [subjectIdLookup, setSubjectIdLookup] = useState({});
   const [showMarkManagement, setShowMarkManagement] = useState(false);
 
-  const subjects = ["English", "Math", "Crs", "Basic Tech", "Business Studies"];
+
   const [students, setStudents] = useState(studentData);
 
 
@@ -108,79 +110,69 @@ const Tab = () => {
     }
   };
 
-  const handleManageMarkClick = async () => {
-    try {
-      const token = localStorage.getItem("jwtToken");
-      const headers = new Headers();
-      headers.append("Authorization", `Bearer ${token}`);
+const handleManageMarkClick = async () => {
+  try {
+    const token = localStorage.getItem("jwtToken");
+    const headers = new Headers();
+    headers.append("Authorization", `Bearer ${token}`);
 
-      const response = await fetch(`${apiUrl}/api/student/${selectedClass}/${currentSession._id}`, {
-        headers,
-      });
+    const response = await fetch(
+      `${apiUrl}/api/student/${selectedClass}/${currentSession._id}`,
+      { headers }
+    );
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch student data");
-      }
+    if (!response.ok) throw new Error("Failed to fetch students");
 
-      const students = await response.json();
+    const students = await response.json();
 
-      // Handle the case where no students are found
-      if (students.length === 0) {
-        console.warn("No students found for the selected class.");
-        // Proceed with the logic for initializing the state, etc.
-        // You might want to show a message to the user or take appropriate action.
-      } else {
-        // Assuming you want to pick the first student for now
-        const firstStudentId = students[0]._id;
-        setSelectedStudentId(firstStudentId);
+    const initializedStudents = students.map((student) => ({
+      studentId: student._id,
+      studentName: student.studentName,
+      subjects: subjectData.map((subject) => ({
+        subjectId: subject._id,
+        subjectName: subject.name,
+        test: 0,
+        exam: 0,
+        total: 0,
+      })),
+    }));
 
-        const existingData = await fetchStudentData(
-          selectedExam,
-          subjectIdLookup[selectedSubject]
-        );
+    setStudentData(initializedStudents);
+    setShowMarkManagement(true);
+  } catch (err) {
+    console.error(err);
+  }
+};
 
-        console.log("Response from fetchStudentData:", existingData);
-        console.log("Existing scores:", existingData.scores);
+const handleSubjectScoreChange = (
+  studentIndex,
+  subjectId,
+  field,
+  value
+) => {
+  setStudentData((prev) =>
+    prev.map((student, sIdx) => {
+      if (sIdx !== studentIndex) return student;
 
-        // Ensure that the scores are properly set in the initial state
-        const initialState = students.map((student) => {
-          const studentScore = existingData.scores.find(
-            (score) => score.studentId && score.studentId._id === student._id
-          );
+      return {
+        ...student,
+        subjects: student.subjects.map((subj) => {
+          if (subj.subjectId !== subjectId) return subj;
 
-          console.log(`Student ${student._id} - Existing Score:`, studentScore);
-
-          const defaultTestScore = studentScore
-            ? studentScore.testscore !== undefined
-              ? studentScore.testscore
-              : 0
-            : 0;
-
-          const defaultExamScore = studentScore
-            ? studentScore.examscore !== undefined
-              ? studentScore.examscore
-              : 0
-            : 0;
-
-          return {
-            studentId: student._id,
-            studentName: student.studentName,
-            testscore: defaultTestScore,
-            examscore: defaultExamScore,
-            marksObtained: defaultTestScore + defaultExamScore,
-            comment: studentScore ? studentScore.comment || "" : "",
+          const updated = {
+            ...subj,
+            [field]: value,
           };
-        });
 
-        console.log("Initial state:", initialState);
+          updated.total =
+            Number(updated.test || 0) + Number(updated.exam || 0);
 
-        setStudentData(initialState);
-        setShowMarkManagement(true);
-      }
-    } catch (error) {
-      console.error("Error fetching student data:", error);
-    }
-  };
+          return updated;
+        }),
+      };
+    })
+  );
+};
 
   useEffect(() => {
     const fetchSubjectData = async () => {
@@ -406,119 +398,228 @@ const Tab = () => {
   };
   
 
-  return (
-    <div>
-      <Container>
-        <ValidatorForm onError={() => null}>
-          <Box className="breadcrumb">
-            <Breadcrumb routeSegments={[{ name: "Manage Exam Mark" }]} />
-          </Box>
-          <Grid container spacing={6}>
-            <Grid item xs={4}>
-              <TextField
-                select
-                label="Select an Exam"
-                variant="outlined"
-                value={selectedExam}
-                onChange={handleExamChange}
-              >
-                {examData &&
-                  examData.map((item) => (
-                    <MenuItem key={item._id} value={item._id}>
-                      {item.name}
-                    </MenuItem>
-                  ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={4}>
-              <TextField
-                select
-                label="Select a class"
-                variant="outlined"
-                value={selectedClass}
-                onChange={handleClassChange}
-              >
-                {classData &&
-                  classData.map((item) => (
-                    <MenuItem key={item.id} value={item.name}>
-                      {item.name}
-                    </MenuItem>
-                  ))}
-              </TextField>
-            </Grid>
+return (
+  <div style={{ padding: "20px" }}>
+    <Container>
+      <ValidatorForm onError={() => null}>
+        <Box mb={3}>
+          <h2>Manage Exam Marks</h2>
+        </Box>
 
-            <Grid item xs={4}>
+        {/* Filters */}
+        <Grid container spacing={2} mb={3}>
+          <Grid item xs={12} md={4}>
+            <TextField
+              select
+              fullWidth
+              label="Select Exam"
+              variant="outlined"
+              value={selectedExam}
+              onChange={handleExamChange}
+            >
+              {examData?.map((item) => (
+                <MenuItem key={item._id} value={item._id}>
+                  {item.name}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <TextField
+              select
+              fullWidth
+              label="Select Class"
+              variant="outlined"
+              value={selectedClass}
+              onChange={handleClassChange}
+            >
+              {classData?.map((item) => (
+                <MenuItem key={item.id} value={item.name}>
+                  {item.name}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <Button
+              fullWidth
+              color="primary"
+              variant="contained"
+              onClick={handleManageMarkClick}
+              sx={{ height: "56px" }}
+            >
+              View Tabulation Sheet
+            </Button>
+          </Grid>
+        </Grid>
+
+        {/* Broad Sheet Table */}
+        {showMarkManagement && (
+          <>
+            <TableContainer
+              component={Paper}
+              sx={{
+                width: "100%",
+                overflowX: "auto",
+                border: "1px solid #ddd",
+              }}
+            >
+              <Table
+                sx={{
+           minWidth: subjectData.length * 240 + 300,
+// 🔥 dynamic width
+                  borderCollapse: "collapse",
+
+                  "& th, & td": {
+                    border: "1px solid #ddd",
+                    padding: "10px",
+                    textAlign: "center",
+                    whiteSpace: "nowrap",
+                    fontSize: "14px",
+                  },
+
+                  "& th": {
+                    backgroundColor: "#f4f6f8",
+                    fontWeight: "bold",
+                  },
+
+                  "& input": {
+                    width: "70px",
+                    padding: "6px",
+                    textAlign: "center",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                  },
+                }}
+              >
+                <TableHead>
+                  <TableRow>
+              <TableCell
+  rowSpan={2}
+  sx={{
+    minWidth: "260px",
+    width: "260px",
+    maxWidth: "260px",
+    whiteSpace: "normal",
+    fontWeight: "bold",
+  }}
+>
+  Student Name
+</TableCell>
+
+
+                  {subjectData.map((subject) => (
+  <TableCell key={subject._id} colSpan={3}>
+    {subject.name}
+  </TableCell>
+))}
+
+
+                    <TableCell rowSpan={2} sx={{ minWidth: "90px" }}>
+                      Total
+                    </TableCell>
+                    <TableCell rowSpan={2} sx={{ minWidth: "90px" }}>
+                      Average
+                    </TableCell>
+                  </TableRow>
+
+                  <TableRow>
+                {subjectData.map((subject) => (
+  <React.Fragment key={subject._id}>
+    <TableCell>Test</TableCell>
+    <TableCell>Exam</TableCell>
+    <TableCell>Total</TableCell>
+  </React.Fragment>
+))}
+
+                  </TableRow>
+                </TableHead>
+
+                <TableBody>
+                  {studentData.map((student, idx) => {
+                    let overallTotal = 0;
+
+                    return (
+                      <TableRow key={student.studentId || idx}>
+                        <TableCell
+                          sx={{
+                            textAlign: "left",
+                            fontWeight: 500,
+                          }}
+                        >
+                          {student.studentName}
+                        </TableCell>
+{student.subjects.map((subj) => (
+  <React.Fragment key={subj.subjectId}>
+    <TableCell>
+      <input
+        type="number"
+        value={subj.test}
+        onChange={(e) =>
+          handleSubjectScoreChange(
+            idx,
+            subj.subjectId,
+            "test",
+            Number(e.target.value)
+          )
+        }
+      />
+    </TableCell>
+
+    <TableCell>
+      <input
+        type="number"
+        value={subj.exam}
+        onChange={(e) =>
+          handleSubjectScoreChange(
+            idx,
+            subj.subjectId,
+            "exam",
+            Number(e.target.value)
+          )
+        }
+      />
+    </TableCell>
+
+    <TableCell>{subj.total}</TableCell>
+  </React.Fragment>
+))}
+
+
+                        <TableCell sx={{ fontWeight: "bold" }}>
+                          {overallTotal}
+                        </TableCell>
+                        <TableCell sx={{ fontWeight: "bold" }}>
+                        (overallTotal / subjectData.length).toFixed(2)
+
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            <Box mt={2}>
               <Button
                 color="primary"
                 variant="contained"
-                type="submit"
-                onClick={handleManageMarkClick}
+                onClick={handleSaveChanges}
               >
-                View Tabulation Sheet
+                Save Changes
               </Button>
-            </Grid>
-          </Grid>
+            </Box>
+          </>
+        )}
+      </ValidatorForm>
 
-          {showMarkManagement && (
-  <>
-    <TableContainer component={Paper}>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>Student Name</TableCell>
-            <TableCell>Test Score</TableCell>
-            <TableCell>Exam Score</TableCell>
-            <TableCell>Total Marks</TableCell>
-            <TableCell>Comment</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {studentData.map((student, index) => (
-            <TableRow key={student.studentId || index}>
-              <TableCell>{student.studentName}</TableCell>
-              <TableCell>
-                <input
-                  type="number"
-                  value={student.testscore}
-                  onChange={(e) => handleScoreChange(index, "testscore", Number(e.target.value))}
-                />
-              </TableCell>
-              <TableCell>
-                <input
-                  type="number"
-                  value={student.examscore}
-                  onChange={(e) => handleScoreChange(index, "examscore", Number(e.target.value))}
-                />
-              </TableCell>
-              <TableCell>{student.marksObtained}</TableCell>
-              <TableCell>
-                <input
-                  type="text"
-                  value={student.comment}
-                  onChange={(e) => handleScoreChange(index, "comment", e.target.value)}
-                />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
-    <Button
-      color="primary"
-      variant="contained"
-      type="button"
-      onClick={handleSaveChanges}
-    >
-      Save Changes
-    </Button>
-  </>
-)}
+      <ToastContainer />
+    </Container>
+  </div>
+);
 
-        </ValidatorForm>
-        <ToastContainer />
-      </Container>
-    </div>
-  );
 };
 
 export default Tab;
