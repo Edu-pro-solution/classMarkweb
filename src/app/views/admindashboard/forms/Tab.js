@@ -63,7 +63,6 @@ const Tab = () => {
     );
     console.log(examData)
   const [subjectData, setSubjectData] = useState([]);
-  const [subjects, setSubject] = useState([]);
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("");
   const [selectedExam, setSelectedExam] = useState("");
@@ -76,7 +75,7 @@ const Tab = () => {
   const [subjectIdLookup, setSubjectIdLookup] = useState({});
   const [showMarkManagement, setShowMarkManagement] = useState(false);
 
-
+  const subjects = ["English", "Math", "Crs", "Basic Tech", "Business Studies"];
   const [students, setStudents] = useState(studentData);
 
 
@@ -255,48 +254,6 @@ const handleSubjectScoreChange = (
 
     // Call the fetchSubjectData function
     fetchSubjectData();
-  }, [selectedClass, apiUrl]); // Include all dependencies used inside the useEffect
-  useEffect(() => {
-    const fetchSubject = async () => {
-      try {
-        if (!selectedClass) {
-          setSubject([]);
-          setSubjectIdLookup({});
-          return;
-        }
-
-        const token = localStorage.getItem("jwtToken");
-        const headers = new Headers();
-        headers.append("Authorization", `Bearer ${token}`);
-
-        const response = await fetch(
-          `${apiUrl}/api/get-subject/${selectedClass}`,
-          {
-            headers,
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch subjects");
-        }
-
-        const data = await response.json();
-
-        setSubject(data);
-
-        // Create a subjectId lookup
-        const lookup = {};
-        data.forEach((subject) => {
-          lookup[subject.name] = subject._id;
-        });
-        setSubjectIdLookup(lookup);
-      } catch (error) {
-        console.error("Error fetching subjects:", error);
-      }
-    };
-
-    // Call the fetchSubjectData function
-    fetchSubject();
   }, [selectedClass, apiUrl]); // Include all dependencies used inside the useEffect
 
   const handleClassChange = (event) => {
