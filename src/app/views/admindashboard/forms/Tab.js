@@ -110,79 +110,155 @@ const Tab = () => {
     }
   };
 
-  const handleManageMarkClick = async () => {
-    try {
-      const token = localStorage.getItem("jwtToken");
-      const headers = new Headers();
-      headers.append("Authorization", `Bearer ${token}`);
+  // const handleManageMarkClick = async () => {
+  //   try {
+  //     const token = localStorage.getItem("jwtToken");
+  //     const headers = new Headers();
+  //     headers.append("Authorization", `Bearer ${token}`);
 
-      const response = await fetch(`${apiUrl}/api/student/${selectedClass}/${currentSession._id}`, {
-        headers,
+  //     const response = await fetch(`${apiUrl}/api/student/${selectedClass}/${currentSession._id}`, {
+  //       headers,
+  //     });
+
+  //     if (!response.ok) {
+  //       throw new Error("Failed to fetch student data");
+  //     }
+
+  //     const students = await response.json();
+
+  //     // Handle the case where no students are found
+  //     if (students.length === 0) {
+  //       console.warn("No students found for the selected class.");
+  //       // Proceed with the logic for initializing the state, etc.
+  //       // You might want to show a message to the user or take appropriate action.
+  //     } else {
+  //       // Assuming you want to pick the first student for now
+  //       const firstStudentId = students[0]._id;
+  //       setSelectedStudentId(firstStudentId);
+
+  //       const existingData = await fetchStudentData(
+  //         selectedExam,
+  //         subjectIdLookup[selectedSubject]
+  //       );
+
+  //       console.log("Response from fetchStudentData:", existingData);
+  //       console.log("Existing scores:", existingData.scores);
+
+  //       // Ensure that the scores are properly set in the initial state
+  //       const initialState = students.map((student) => {
+  //         const studentScore = existingData.scores.find(
+  //           (score) => score.studentId && score.studentId._id === student._id
+  //         );
+
+  //         console.log(`Student ${student._id} - Existing Score:`, studentScore);
+
+  //         const defaultTestScore = studentScore
+  //           ? studentScore.testscore !== undefined
+  //             ? studentScore.testscore
+  //             : 0
+  //           : 0;
+
+  //         const defaultExamScore = studentScore
+  //           ? studentScore.examscore !== undefined
+  //             ? studentScore.examscore
+  //             : 0
+  //           : 0;
+
+  //         return {
+  //           studentId: student._id,
+  //           studentName: student.studentName,
+  //           testscore: defaultTestScore,
+  //           examscore: defaultExamScore,
+  //           marksObtained: defaultTestScore + defaultExamScore,
+  //           comment: studentScore ? studentScore.comment || "" : "",
+  //         };
+  //       });
+
+  //       console.log("Initial state:", initialState);
+
+  //       setStudentData(initialState);
+  //       setShowMarkManagement(true);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching student data:", error);
+  //   }
+  // };
+  const handleManageMarkClick = async () => {
+  try {
+    const token = localStorage.getItem("jwtToken");
+    const headers = new Headers();
+    headers.append("Authorization", `Bearer ${token}`);
+
+    // Fetch students for the selected class and session
+    const response = await fetch(
+      `${apiUrl}/api/student/${selectedClass}/${currentSession._id}`,
+      { headers }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch student data");
+    }
+
+    const students = await response.json();
+
+    if (!students || students.length === 0) {
+      console.warn("No students found for the selected class.");
+      setStudentData([]);
+      setShowMarkManagement(false);
+      return;
+    }
+
+    // Optionally, select the first student
+    setSelectedStudentId(students[0]._id);
+
+    // Fetch existing scores for the selected exam and subject
+    const existingData = await fetchStudentData(
+      selectedExam,
+      subjectIdLookup[selectedSubject]
+    );
+
+    console.log("Response from fetchStudentData:", existingData);
+
+    // Map students to include subjects and their scores
+    const initialState = students.map((student) => {
+      // Filter scores for this student
+      const studentScores = existingData.scores.filter(
+        (score) => score.studentId && score.studentId._id === student._id
+      );
+
+      // Map each subject to its score
+      const subjectsWithScores = subjectData.map((subj) => {
+        const scoreForSubject = studentScores.find(
+          (s) => s.subjectId === subj._id
+        ) || {};
+
+        const test = scoreForSubject.testscore || 0;
+        const exam = scoreForSubject.examscore || 0;
+
+        return {
+          subjectId: subj._id,
+          test,
+          exam,
+          total: test + exam,
+        };
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch student data");
-      }
+      return {
+        studentId: student._id,
+        studentName: student.studentName,
+        subjects: subjectsWithScores,
+      };
+    });
 
-      const students = await response.json();
+    console.log("Initial state with subjects:", initialState);
 
-      // Handle the case where no students are found
-      if (students.length === 0) {
-        console.warn("No students found for the selected class.");
-        // Proceed with the logic for initializing the state, etc.
-        // You might want to show a message to the user or take appropriate action.
-      } else {
-        // Assuming you want to pick the first student for now
-        const firstStudentId = students[0]._id;
-        setSelectedStudentId(firstStudentId);
+    setStudentData(initialState);
+    setShowMarkManagement(true);
+  } catch (error) {
+    console.error("Error fetching student data:", error);
+  }
+};
 
-        const existingData = await fetchStudentData(
-          selectedExam,
-          subjectIdLookup[selectedSubject]
-        );
-
-        console.log("Response from fetchStudentData:", existingData);
-        console.log("Existing scores:", existingData.scores);
-
-        // Ensure that the scores are properly set in the initial state
-        const initialState = students.map((student) => {
-          const studentScore = existingData.scores.find(
-            (score) => score.studentId && score.studentId._id === student._id
-          );
-
-          console.log(`Student ${student._id} - Existing Score:`, studentScore);
-
-          const defaultTestScore = studentScore
-            ? studentScore.testscore !== undefined
-              ? studentScore.testscore
-              : 0
-            : 0;
-
-          const defaultExamScore = studentScore
-            ? studentScore.examscore !== undefined
-              ? studentScore.examscore
-              : 0
-            : 0;
-
-          return {
-            studentId: student._id,
-            studentName: student.studentName,
-            testscore: defaultTestScore,
-            examscore: defaultExamScore,
-            marksObtained: defaultTestScore + defaultExamScore,
-            comment: studentScore ? studentScore.comment || "" : "",
-          };
-        });
-
-        console.log("Initial state:", initialState);
-
-        setStudentData(initialState);
-        setShowMarkManagement(true);
-      }
-    } catch (error) {
-      console.error("Error fetching student data:", error);
-    }
-  };
 const handleSubjectScoreChange = (
   studentIndex,
   subjectId,
@@ -240,11 +316,11 @@ const handleSubjectScoreChange = (
 
         setSubjectData(data);
 
-        // Create a subjectId lookup
+        // Create a subjectId l
         const lookup = {};
         data.forEach((subject) => {
           lookup[subject.name] = subject._id;
-        });
+        });  
         setSubjectIdLookup(lookup);
       } catch (error) {
         console.error("Error fetching subjects:", error);
