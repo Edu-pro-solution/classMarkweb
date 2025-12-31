@@ -75,7 +75,7 @@ const Tab = () => {
   const [subjectIdLookup, setSubjectIdLookup] = useState({});
   const [showMarkManagement, setShowMarkManagement] = useState(false);
 
-  const subjects = ["English", "Math", "Crs", "Basic Tech", "Business Studies"];
+  // const subjects = ["English", "Math", "Crs", "Basic Tech", "Business Studies"];
   const [students, setStudents] = useState(studentData);
 
 
@@ -226,12 +226,11 @@ const handleSubjectScoreChange = (
         const headers = new Headers();
         headers.append("Authorization", `Bearer ${token}`);
 
-        const response = await fetch(
-          `${apiUrl}/api/get-subject/${selectedClass}`,
-          {
-            headers,
-          }
-        );
+    const response = await fetch(
+  `${apiUrl}/api/get-subject/${selectedClass}/${currentSession._id}`,
+  { headers }
+);
+
 
         if (!response.ok) {
           throw new Error("Failed to fetch subjects");
@@ -507,7 +506,7 @@ return (
             >
               <Table
                 sx={{
-                  minWidth: subjects.length * 240 + 300, // 🔥 dynamic width
+                  minWidth: subjectData.length * 240 + 300, // 🔥 dynamic width
                   borderCollapse: "collapse",
 
                   "& th, & td": {
@@ -548,9 +547,9 @@ return (
 </TableCell>
 
 
-                    {subjects.map((subj) => (
-                      <TableCell key={subj} colSpan={3}>
-                        {subj}
+                    {subjectData?.map((subj) => (
+                      <TableCell key={subj._id} colSpan={3}>
+                        {subj.name}
                       </TableCell>
                     ))}
 
@@ -563,8 +562,8 @@ return (
                   </TableRow>
 
                   <TableRow>
-                    {subjects.map((subj) => (
-                      <React.Fragment key={subj}>
+                    {subjectData?.map((subj) => (
+                      <React.Fragment key={subj._id}>
                         <TableCell>Test</TableCell>
                         <TableCell>Exam</TableCell>
                         <TableCell>Total</TableCell>
@@ -588,13 +587,12 @@ return (
                           {student.studentName}
                         </TableCell>
 
-                        {subjects.map((subj, sIdx) => {
-                          const test =
-                            Number(student.scores?.[subj]?.test) || 0;
-                          const exam =
-                            Number(student.scores?.[subj]?.exam) || 0;
-                          const total = test + exam;
-                          overallTotal += total;
+                   {student.subjects?.map((subj, sIdx) => {
+
+  const test = Number(subj.test) || 0;
+  const exam = Number(subj.exam) || 0;
+  const total = test + exam;
+  overallTotal += total;
 
                           return (
                             <React.Fragment key={sIdx}>
@@ -635,7 +633,7 @@ return (
                           {overallTotal}
                         </TableCell>
                         <TableCell sx={{ fontWeight: "bold" }}>
-                          {(overallTotal / subjects.length).toFixed(2)}
+                          {(overallTotal / subjectData.length).toFixed(2)}
                         </TableCell>
                       </TableRow>
                     );
