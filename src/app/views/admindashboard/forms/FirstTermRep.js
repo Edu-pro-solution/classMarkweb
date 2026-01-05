@@ -217,39 +217,85 @@ const FirstTermRep = ({ studentId }) => {
       }
       console.log("Filtered Scores:", filteredScores);
 
-      const scoresWithPositions = await Promise.all(
-        filteredScores.map(async (score) => {
-          const { examId, subjectId } = score;
+      // const scoresWithPositions = await Promise.all(
+      //   filteredScores.map(async (score) => {
+      //     const { examId, subjectId } = score;
 
-          if (!examId || !subjectId) {
-            console.error(
-              "Exam ID or Subject ID not found for a score:",
-              score
-            );
-            return { ...score, position: "-" }; // use placeholder
-          }
+      //     if (!examId || !subjectId) {
+      //       console.error(
+      //         "Exam ID or Subject ID not found for a score:",
+      //         score
+      //       );
+      //       return { ...score, position: "-" }; // use placeholder
+      //     }
 
-          const allStudentsData = await fetchAllStudentsData(
-            examId._id,
-            subjectId._id,
-             currentSession._id
-          );
+      //     const allStudentsData = await fetchAllStudentsData(
+      //       examId._id,
+      //       subjectId._id,
+      //        currentSession._id
+      //     );
 
-          const sortedStudents = allStudentsData.sort(
-            (a, b) => b.marksObtained - a.marksObtained
-          );
+      //     const sortedStudents = allStudentsData.sort(
+      //       (a, b) => b.marksObtained - a.marksObtained
+      //     );
 
-          const studentPosition =
-            sortedStudents.findIndex(
-              (student) => student.studentId?._id === studentId
-            ) + 1;
+      //     const studentPosition =
+      //       sortedStudents.findIndex(
+      //         (student) => student.studentId?._id === studentId
+      //       ) + 1;
 
-          return {
-            ...score,
-            position: studentPosition,
-          };
-        })
-      );
+      //     return {
+      //       ...score,
+      //       position: studentPosition,
+      //     };
+      //   })
+      // );
+const scoresWithPositions = await Promise.all(
+  filteredScores.map(async (score) => {
+    const { examId, subjectId } = score;
+
+    if (!examId || !subjectId) {
+      console.error("Exam ID or Subject ID not found for a score:", score);
+      return { ...score, position: "-" };
+    }
+
+    const allStudentsData = await fetchAllStudentsData(
+      examId._id,
+      subjectId._id,
+      currentSession._id
+    );
+
+    // Filter valid marks
+    const validStudents = allStudentsData
+      .filter(s => s.marksObtained !== undefined && s.marksObtained !== null)
+      .map(s => ({ ...s, marksObtained: Number(s.marksObtained) }));
+
+    // Sort descending
+    validStudents.sort((a, b) => b.marksObtained - a.marksObtained);
+
+    // Assign ranks (handles ties)
+    let currentRank = 1;
+    let lastScore = null;
+    validStudents.forEach((student, index) => {
+      if (lastScore !== null && student.marksObtained < lastScore) {
+        currentRank = index + 1;
+      }
+      student.position = currentRank;
+      lastScore = student.marksObtained;
+    });
+
+    // ✅ Corrected student ID comparison
+    const studentPosition = validStudents.find(
+      s => (s.studentId?._id || s.studentId).toString() === studentId.toString()
+    )?.position || "-";
+
+    return {
+      ...score,
+      position: studentPosition,
+    };
+  })
+);
+
 
       return scoresWithPositions;
     } catch (error) {
@@ -1085,9 +1131,10 @@ const fetchAllStudentsData = async (examId, subjectId, sessionId) => {
                             : "-"}
                         </td>{" "}
                         {/* Obtained Marks */}
-                        <td>
-                          {score?.position !== undefined ? score.position : "-"}
-                        </td>{" "}
+                      
+                          <td>{score?.position !== undefined ? score.position : "-"}</td>
+
+                       
                         {/* Position */}
                         <td>{calculateGrade(score?.comment) || "-"}</td>{" "}
                         {/* Grade */}
