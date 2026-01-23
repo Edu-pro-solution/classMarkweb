@@ -90,7 +90,12 @@ const FirstTermRep = ({ studentId }) => {
 
   // const { data } = useFetch(`/students/${id}`);
 
-  const { data } = useFetch(`/get-students/${studentId}/${currentSession._id}`);
+  // const { data } = useFetch(`/get-students/${studentId}/${currentSession._id}`);
+const sessionId = currentSession?._id;
+
+const { data } = useFetch(
+  sessionId ? `/get-students/${studentId}/${sessionId}` : null
+);
 
   // const { data,  } = useFetch(`/students/${user._id}`); // Fetch data using the correct URL
 
