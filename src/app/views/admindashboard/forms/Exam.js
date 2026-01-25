@@ -66,7 +66,7 @@ const Exam = () => {
   console.log("Current studentData state:", studentData);
   const [selectedStudentId, setSelectedStudentId] = useState("");
 
-  const [subjectIdLookup, setSubjectIdLookup] = useState({});
+  // const [subjectIdLookup, setSubjectIdLookup] = useState({});
   const [showMarkManagement, setShowMarkManagement] = useState(false);
   const apiUrl = process.env.REACT_APP_API_URL;
 
@@ -87,7 +87,8 @@ const fetchStudentData = async (examId, subjectId, sessionId) => {
     headers.append("Authorization", `Bearer ${token}`);
 
     const response = await fetch(
-      `${apiUrl}/api/get-all-scores/${examId}/${subjectId}/${sessionId}`,
+      // `${apiUrl}/api/get-all-scores/${examId}/${subjectId}/${sessionId}`,
+      `${apiUrl}/api/get-all-scores/${selectedExam}/${selectedSubject}/${currentSession._id}`,
       { headers }
     );
 
@@ -135,7 +136,8 @@ const handleManageMarkClick = async () => {
 
     // 2️⃣ Fetch scores (same as Postman)
     const scoreRes = await fetch(
-      `${apiUrl}/api/get-all-scores/${selectedExam}/${subjectIdLookup[selectedSubject]}/${currentSession._id}`,
+      // `${apiUrl}/api/get-all-scores/${selectedExam}/${subjectIdLookup[selectedSubject]}/${currentSession._id}`,
+      `${apiUrl}/api/get-all-scores/${selectedExam}/${selectedSubject}/${currentSession._id}`,
       {
         headers: { Authorization: `Bearer ${token}` },
       }
@@ -183,7 +185,7 @@ console.log("selectedclass: ", selectedClass);
       try {
         if (!selectedClass) {
           setSubjectData([]);
-          setSubjectIdLookup({});
+          // setSubjectIdLookup({});
           return;
         }
 
@@ -207,11 +209,11 @@ console.log("selectedclass: ", selectedClass);
         setSubjectData(data);
 
         // Create a subjectId lookup
-        const lookup = {};
-        data.forEach((subject) => {
-          lookup[subject.name] = subject._id;
-        });
-        setSubjectIdLookup(lookup);
+        // const lookup = {};
+        // data.forEach((subject) => {
+        //   lookup[subject.name] = subject._id;
+        // });
+        // setSubjectIdLookup(lookup);
       } catch (error) {
         console.error("Error fetching subjects:", error);
       }
@@ -260,59 +262,99 @@ const handleSubjectChange = (event) => {
 };
 
 
+// const handleSaveChanges = async () => {
+//   try {
+//     const token = localStorage.getItem("jwtToken");
+
+//     const payload = {
+//       examId: selectedExam,
+//       // subjectId: subjectIdLookup[selectedSubject],
+//       subjectId: selectedSubject,
+//       updates: studentData.map((s) => ({
+//         studentId: s.studentId,
+//         testscore: s.testscore === "" ? undefined : Number(s.testscore),
+//         examscore: s.examscore === "" ? undefined : Number(s.examscore),
+//         comment: s.comment === "" ? undefined : s.comment,
+//       })),
+//     };
+
+//     // Decide endpoint and method
+//     let url = "";
+//     let method = "";
+
+//     // If all students are new (no existing scores) → saveMark
+//     const allNew = studentData.every(
+//       (s) => s.testscore === "" && s.examscore === ""
+//     );
+
+//     if (allNew) {
+//       url = `${apiUrl}/api/save-marks/${currentSession._id}`;
+//       method = "POST";
+//     } else {
+//       // If any student has a score → update existing marks
+//       url = `${apiUrl}/api/update-all-marks`;
+//       method = "PUT";
+//     }
+
+//     const res = await fetch(url, {
+//       method,
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//         "Content-Type": "application/json",
+//       },
+//       body: JSON.stringify(payload),
+//     });
+
+//     if (!res.ok) {
+//       const err = await res.json();
+//       throw new Error(err.message || "Failed to save/update marks");
+//     }
+
+//     toast.success("Marks saved/updated successfully");
+//   } catch (err) {
+//     console.error(err);
+//     toast.error(err.message || "Save/update failed");
+//   }
+// };
 const handleSaveChanges = async () => {
   try {
     const token = localStorage.getItem("jwtToken");
 
     const payload = {
       examId: selectedExam,
-      subjectId: subjectIdLookup[selectedSubject],
+      subjectId: selectedSubject,
       updates: studentData.map((s) => ({
         studentId: s.studentId,
-        testscore: s.testscore === "" ? undefined : Number(s.testscore),
-        examscore: s.examscore === "" ? undefined : Number(s.examscore),
-        comment: s.comment === "" ? undefined : s.comment,
+        testscore: Number(s.testscore || 0),
+        examscore: Number(s.examscore || 0),
+        comment: s.comment || "",
       })),
     };
 
-    // Decide endpoint and method
-    let url = "";
-    let method = "";
-
-    // If all students are new (no existing scores) → saveMark
-    const allNew = studentData.every(
-      (s) => s.testscore === "" && s.examscore === ""
+    const res = await fetch(
+      `${apiUrl}/api/save-marks/${currentSession._id}`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      }
     );
-
-    if (allNew) {
-      url = `${apiUrl}/api/save-marks/${currentSession._id}`;
-      method = "POST";
-    } else {
-      // If any student has a score → update existing marks
-      url = `${apiUrl}/api/update-all-marks`;
-      method = "PUT";
-    }
-
-    const res = await fetch(url, {
-      method,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
 
     if (!res.ok) {
       const err = await res.json();
-      throw new Error(err.message || "Failed to save/update marks");
+      throw new Error(err.message || "Failed to save marks");
     }
 
-    toast.success("Marks saved/updated successfully");
+    toast.success("Marks saved successfully");
   } catch (err) {
-    console.error(err);
-    toast.error(err.message || "Save/update failed");
+    console.error("❌ Save error:", err);
+    toast.error(err.message || "Save failed");
   }
 };
+
 
   // const handleScoreChange = (index, scoreType, value) => {
   //   // Assuming studentData is an array
@@ -434,7 +476,7 @@ const handleSaveChanges = async () => {
               </TextField>
             </Grid>
             <Grid item xs={4}>
-              <TextField
+              {/* <TextField
                 select
                 label="Select the subject"
                 variant="outlined"
@@ -447,7 +489,21 @@ const handleSaveChanges = async () => {
                       {item.name}
                     </MenuItem>
                   ))}
-              </TextField>
+              </TextField> */}
+              <TextField
+  select
+  label="Select the subject"
+  variant="outlined"
+  value={selectedSubject}
+  onChange={handleSubjectChange}
+>
+  {subjectData.map((item) => (
+    <MenuItem key={item._id} value={item._id}>
+      {item.name}
+    </MenuItem>
+  ))}
+</TextField>
+
             </Grid>
             <Grid item xs={4}>
               <Button
@@ -474,7 +530,8 @@ const handleSaveChanges = async () => {
 
                   <h4 style={{ color: "#696969" }}>Class: {selectedClass}</h4>
                   <h4 style={{ color: "#696969" }}>
-                    Subject: {getSubjectById(subjectIdLookup[selectedSubject])}
+                   Subject: {getSubjectById(selectedSubject)}
+
                   </h4>
                 </div>
               </div>
