@@ -323,12 +323,20 @@ const handleSaveChanges = async () => {
     const payload = {
       examId: selectedExam,
       subjectId: selectedSubject,
+      // updates: studentData.map((s) => ({
+      //   studentId: s.studentId,
+      //   testscore: Number(s.testscore || 0),
+      //   examscore: Number(s.examscore || 0),
+      //   comment: s.comment || "",
+      // })),
       updates: studentData.map((s) => ({
-        studentId: s.studentId,
-        testscore: Number(s.testscore || 0),
-        examscore: Number(s.examscore || 0),
-        comment: s.comment || "",
-      })),
+  studentId: s.studentId,
+  // Only include testscore/examscore if they are not empty
+  ...(s.testscore !== "" && { testscore: Number(s.testscore) }),
+  ...(s.examscore !== "" && { examscore: Number(s.examscore) }),
+  ...(s.comment !== "" && { comment: s.comment }),
+})),
+
     };
 
     const res = await fetch(
