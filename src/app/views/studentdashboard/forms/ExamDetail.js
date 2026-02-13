@@ -26,12 +26,16 @@ import jwtDecode from "jwt-decode";
 import CameraFeed from "./CameraFeed";
 
 import { SessionContext } from "../../../components/MatxLayout/Layout1/SessionContext";
+import Calculator from "./Calculator";
 
 const ExamDetail = () => {
   const { id } = useParams(); // Get the id parameter from the route
   const [exam, setExam] = useState(null);
   const [answers, setAnswers] = useState({});
+  const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
 
+  const openCalculator = () => setIsCalculatorOpen(true);
+  const closeCalculator = () => setIsCalculatorOpen(false);
   const [totalMark, setTotalMark] = useState(0);
   const [questions, setQuestions] = useState([]);
   const [showQuestions, setShowQuestions] = useState(false);
@@ -457,6 +461,17 @@ const ExamDetail = () => {
               <TableCell>
                 <b>Total Mark</b>
               </TableCell>
+              <div>
+      {/* Your existing Exam details code */}
+      
+      {/* Button to open calculator */}
+      <Button variant="outlined" color="primary" onClick={openCalculator} style={{ marginTop: "20px" }}>
+        Open Calculator
+      </Button>
+
+      {/* Calculator modal */}
+      <Calculator open={isCalculatorOpen} onClose={closeCalculator} />
+    </div>
               <TableCell>{exam ? exam?.totalMark : "Loading..."}</TableCell>
             </TableRow>
           </TableBody>
