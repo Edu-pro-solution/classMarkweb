@@ -24,7 +24,7 @@ import logo from "./logohlhs.png";
 import * as Yup from "yup";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import "./style.css";
-import jwtDecode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import CustomLabel from "./CustomLabel";
 const apiUrl = process.env.REACT_APP_API_URL;
 

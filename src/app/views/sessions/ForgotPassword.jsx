@@ -98,7 +98,7 @@ import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import * as Yup from "yup";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import jwtDecode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import pic from "./one.jpg";
 import pic1 from "./two.jpg";

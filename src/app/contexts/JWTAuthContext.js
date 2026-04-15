@@ -1,5 +1,5 @@
 import React, { createContext, useEffect, useReducer } from "react";
-import jwtDecode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import { MatxLoading } from "../../app/components";
 
@@ -112,34 +112,37 @@ export const AuthProvider = ({ children }) => {
 
     initAuth();
   }, []);
+const login = async (identifier, password, role) => {
+  try {
+    const response = await axios.post(`${apiUrl}/api/login`, {
+      identifier,
+      password,
+      role,
+    });
 
-  const login = async (identifier, password, role) => {
-    try {
-      const response = await axios.post(`${apiUrl}/api/login`, {
-        identifier,
-        password,
-        role,
+    if (response.status === 200) {
+      const { token, user } = response.data;
+      setSession(token);
+      localStorage.setItem("user", JSON.stringify(user));
+      dispatch({
+        type: "LOGIN",
+        payload: { user },
       });
-
-      if (response.status === 200) {
-        const { token, user } = response.data;
-        setSession(token);
-        localStorage.setItem("user", JSON.stringify(user));
-        dispatch({
-          type: "LOGIN",
-          payload: { user },
-        });
-        return response;
-      } else {
-        console.error("Login failed with status:", response.status);
-        return response;
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-      throw error;
+      return response;
+    } else {
+      console.error("Login failed with status:", response.status);
+      return response;
     }
-  };
-
+  } catch (error) {
+    // check for rate limiting first
+    if (error.response && error.response.status === 429) {
+      throw new Error('TOO_MANY_ATTEMPTS');
+    }
+    // all other errors
+    console.error("Login error:", error);
+    throw error;
+  }
+};
   const register = async (userData) => {
     try {
       const response = await axios.post(`${apiUrl}/api/register`, userData);

@@ -271,15 +271,19 @@ const useFetch = (url) => {
       console.log("Fetching data from URL:", url);
 
       try {
-        let headers = {};
-        const token = localStorage.getItem("jwtToken");
+        // let headers = {};
+        // const token = localStorage.getItem("jwtToken");
 
-        // Conditionally set the Authorization header only if the URL requires it
-        if (url.includes("/protected-route")) {
-          // Adjust this condition as needed
-          headers = token ? { Authorization: `Bearer ${token}` } : {};
-        }
+        // // Conditionally set the Authorization header only if the URL requires it
+        // if (url.includes("/protected-route")) {
+        //   // Adjust this condition as needed
+        //   headers = token ? { Authorization: `Bearer ${token}` } : {};
+        // }
+const token = localStorage.getItem("jwtToken");
 
+const headers = token
+  ? { Authorization: `Bearer ${token}` }
+  : {};
         const response = await axios.get(`${apiUrl}/api${url}`, { headers });
         console.log("Data fetched successfully:", response.data);
 

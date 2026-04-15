@@ -22,7 +22,7 @@ import {
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import jwtDecode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import CameraFeed from "./CameraFeed";
 
 import { SessionContext } from "../../../components/MatxLayout/Layout1/SessionContext";

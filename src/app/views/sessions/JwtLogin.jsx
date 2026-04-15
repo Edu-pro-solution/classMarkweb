@@ -16,7 +16,7 @@ import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import * as Yup from "yup";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import jwtDecode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import pic from "./one.jpg";
 import pic1 from "./two.jpg";
@@ -66,28 +66,25 @@ const JwtLogin = () => {
     schoolLogo: "",
   });
   const apiUrl = process.env.REACT_APP_API_URL;
-  const handleFormSubmit = async (values) => {
-    console.log("handleFormSubmit is triggered");
+const handleFormSubmit = async (values) => {
+  try {
+    const response = await login(values.identifier, values.password);
 
-    try {
-      // Assuming your login function returns a JWT token upon successful login
-      const response = await login(values.identifier, values.password);
-
-      if (response.status === 200) {
-        // Successful login
-        // Redirect the user after successful login
-        checkUserRoleAndRedirect();
-      } else {
-        // Handle other status codes (e.g., 401 for unauthorized)
-        console.error("Login failed with status:", response.status);
-        toast.error("Invalid credentials"); // Display an error notification
-      }
-    } catch (error) {
-      console.error("Incorrect Username/Email or Password:", error);
+    if (response.status === 200) {
+      checkUserRoleAndRedirect();
+    } else {
+      toast.error("Invalid credentials");
+    }
+  } catch (error) {
+    if (error.message === 'TOO_MANY_ATTEMPTS') {
+      toast.error("Too many login attempts. Please wait 15 minutes and try again.", {
+        autoClose: 8000,
+      });
+    } else {
       toast.error("Incorrect Username/Email or Password");
     }
-  };
-
+  }
+};
   const getUserRoleFromToken = () => {
     // Implement this function to extract the user's role from the JWT token.
     const jwtToken = localStorage.getItem("jwtToken");
