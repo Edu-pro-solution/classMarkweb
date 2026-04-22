@@ -113,6 +113,10 @@ const normalizeId = (id) => {
 };
 
 const handleManageMarkClick = async () => {
+  console.log("🔍 selectedExam:", selectedExam);
+  console.log("🔍 selectedSubject:", selectedSubject);
+  console.log("🔍 sessionId:", currentSession._id);
+  console.log("🔍 Full URL:", `${apiUrl}/api/get-all-scores/${selectedExam}/${selectedSubject}/${currentSession._id}`);
   try {
     const token = localStorage.getItem("jwtToken");
 
