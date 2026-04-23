@@ -305,51 +305,58 @@ const TermRep = ({ studentId }) => {
       // console.log("Score being checked:", score);
       // console.log("Valid marks?", validMarks, "Is second term?", isSecondTerm);
 
-      const filteredScores = response.data.scores.filter(
-        (score) =>
-          (score.marksObtained !== undefined || score.marksObtained === 0) &&
-          // score.examId.name.toUpperCase() === "SECOND TERM"
-          score?.examId?.name?.toUpperCase() === "SECOND TERM"
-      );
+      // const filteredScores = response.data.scores.filter(
+      //   (score) =>
+      //     (score.marksObtained !== undefined || score.marksObtained === 0) &&
+      //     // score.examId.name.toUpperCase() === "SECOND TERM"
+      //     score?.examId?.name?.toUpperCase() === "SECOND TERM"
+      // );
+const filteredScores = response.data.scores.filter(
+  (score) =>
+    score.marksObtained !== undefined &&
+    score?.examId?.name?.toUpperCase() === "SECOND TERM"
+);
 
-      if (filteredScores.length === 0) {
-        console.warn("No second term scores found for the student");
-        return []; // <<< Important: Return empty array instead of throwing
-      }
-      console.log("Filtered Scores:", filteredScores);
+if (filteredScores.length === 0) {
+  console.warn("No second term scores found for the student");
+  return [];
+}
 
-      const scoresWithPositions = await Promise.all(
-        filteredScores.map(async (score) => {
-          const { examId, subjectId } = score;
+// ✅ Fix: Recalculate marksObtained from testscore + examscore
+// (DB may have stored 0, so we always compute it fresh)
+const fixedScores = filteredScores.map((score) => ({
+  ...score,
+  marksObtained: (score.testscore || 0) + (score.examscore || 0),
+}));
 
-          if (!examId || !subjectId) {
-            console.error(
-              "Exam ID or Subject ID not found for a score:",
-              score
-            );
-            return { ...score, position: "-" }; // use placeholder
-          }
+console.log("Fixed Scores:", fixedScores);
 
-          const allStudentsData = await fetchAllStudentsData(
-            examId._id,
-            subjectId._id
-          );
+     const scoresWithPositions = await Promise.all(
+  fixedScores.map(async (score) => {      // ← use fixedScores ✅
+    const { examId, subjectId } = score;
 
-          const sortedStudents = allStudentsData.sort(
-            (a, b) => b.marksObtained - a.marksObtained
-          );
+    if (!examId || !subjectId) {
+      console.error("Exam ID or Subject ID not found for a score:", score);
+      return { ...score, position: "-" };
+    }
 
-          const studentPosition =
-            sortedStudents.findIndex(
-              (student) => student.studentId?._id === studentId
-            ) + 1;
+    const allStudentsData = await fetchAllStudentsData(examId._id, subjectId._id);
 
-          return {
-            ...score,
-            position: studentPosition,
-          };
-        })
-      );
+    const sortedStudents = allStudentsData.sort(
+      (a, b) => b.marksObtained - a.marksObtained
+    );
+
+    const studentPosition =
+      sortedStudents.findIndex(
+        (student) => student.studentId?._id === studentId
+      ) + 1;
+
+    return {
+      ...score,
+      position: studentPosition,
+    };
+  })
+);
 
       return scoresWithPositions;
     } catch (error) {
