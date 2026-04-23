@@ -90,7 +90,12 @@ const TermRep = ({ studentId }) => {
 
   // const { data } = useFetch(`/students/${id}`);
 
-  const { data } = useFetch(`/get-students/${studentId}/${currentSession._id}`);
+  // const { data } = useFetch(`/get-students/${studentId}/${currentSession._id}`);
+const sessionId = currentSession?._id;
+
+const { data } = useFetch(
+  sessionId ? `/get-students/${studentId}/${sessionId}` : null
+);
 
   // const { data,  } = useFetch(`/students/${user._id}`); // Fetch data using the correct URL
 
@@ -118,29 +123,6 @@ const TermRep = ({ studentId }) => {
 
   const apiUrl = process.env.REACT_APP_API_URL;
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     setLoading(true);
-
-  //     try {
-  //       // Fetch student data
-  //       const studentData = await fetchStudentData(studentId);
-
-  //       // Set the student data in state
-  //       setStudentData(studentData);
-
-  //       setLoading(false);
-  //     } catch (error) {
-  //       // Handle errors
-  //       setError(error.message);
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchData();
-
-  //   console.log("Student ID in useEffect:", studentId);
-  // }, [studentId, currentSession]);
   useEffect(() => {
     if (!studentId || !currentSession?._id) return;
 
@@ -206,85 +188,7 @@ const TermRep = ({ studentId }) => {
 
   fetchclassteacher();
 
-  // const fetchStudentData = async (studentId) => {
-  //   try {
-  //     const token = localStorage.getItem("jwtToken");
-  //     if (!token) {
-  //       throw new Error("JWT token not found");
-  //     }
 
-  //     const headers = {
-  //       Authorization: `Bearer ${token}`,
-  //     };
-
-  //     const response = await axios.get(
-  //       `${apiUrl}/api/get-scores-by-student/${studentId}/${currentSession._id}`,
-  //       { headers }
-  //     );
-
-  //     const filteredScores = response.data.scores.filter(
-  //       (score) =>
-  //         (score.marksObtained !== undefined || score.marksObtained === 0) &&
-  //         score.examId.name.toUpperCase() === "SECOND TERM"
-  //     );
-
-  //     if (filteredScores.length === 0) {
-  //       throw new Error("No second term scores found for the student");
-  //     }
-
-  //     console.log("Filtered Scores:", filteredScores);
-
-  //     const scoresWithPositions = await Promise.all(
-  //       filteredScores.map(async (score) => {
-  //         const { examId, subjectId } = score;
-
-  //         if (!examId || !subjectId) {
-  //           console.error(
-  //             "Exam ID or Subject ID not found for a score:",
-  //             score
-  //           );
-  //           return { ...score, position: 0 };
-  //         }
-
-  //         const allStudentsData = await fetchAllStudentsData(
-  //           examId._id,
-  //           subjectId._id
-  //         );
-
-  //         const sortedStudents = allStudentsData.sort(
-  //           (a, b) => b.marksObtained - a.marksObtained
-  //         );
-
-  //         const studentPosition =
-  //           sortedStudents.findIndex(
-  //             (student) => student.studentId?._id === studentId
-  //           ) + 1;
-
-  //         console.log(
-  //           `Position of current student for Subject ${subjectId._id} and Exam ${examId._id}:`,
-  //           studentPosition
-  //         );
-
-  //         return {
-  //           ...score,
-  //           position: studentPosition,
-  //         };
-  //       })
-  //     );
-
-  //     console.log("Scores with Positions:", scoresWithPositions); // Log scores with positions
-
-  //     // Make sure scoresWithPositions is an array with at least one element
-  //     if (scoresWithPositions && scoresWithPositions.length > 0) {
-  //       return scoresWithPositions;
-  //     } else {
-  //       throw new Error("No scores available");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching student data:", error);
-  //     // throw new Error("Failed to fetch student data");
-  //   }
-  // };
   const fetchStudentData = async (studentId) => {
     try {
       const token = localStorage.getItem("jwtToken");
@@ -305,34 +209,54 @@ const TermRep = ({ studentId }) => {
       // console.log("Score being checked:", score);
       // console.log("Valid marks?", validMarks, "Is second term?", isSecondTerm);
 
-      // const filteredScores = response.data.scores.filter(
-      //   (score) =>
-      //     (score.marksObtained !== undefined || score.marksObtained === 0) &&
-      //     // score.examId.name.toUpperCase() === "SECOND TERM"
-      //     score?.examId?.name?.toUpperCase() === "SECOND TERM"
+      const filteredScores = response.data.scores.filter(
+        (score) =>
+          (score.marksObtained !== undefined || score.marksObtained === 0) &&
+          // score.examId.name.toUpperCase() === "SECOND TERM"
+          score?.examId?.name?.toUpperCase() === "SECOND TERM"
+      );
+
+      if (filteredScores.length === 0) {
+        console.warn("No second term scores found for the student");
+        return []; // <<< Important: Return empty array instead of throwing
+      }
+      console.log("Filtered Scores:", filteredScores);
+
+      // const scoresWithPositions = await Promise.all(
+      //   filteredScores.map(async (score) => {
+      //     const { examId, subjectId } = score;
+
+      //     if (!examId || !subjectId) {
+      //       console.error(
+      //         "Exam ID or Subject ID not found for a score:",
+      //         score
+      //       );
+      //       return { ...score, position: "-" }; // use placeholder
+      //     }
+
+      //     const allStudentsData = await fetchAllStudentsData(
+      //       examId._id,
+      //       subjectId._id,
+      //        currentSession._id
+      //     );
+
+      //     const sortedStudents = allStudentsData.sort(
+      //       (a, b) => b.marksObtained - a.marksObtained
+      //     );
+
+      //     const studentPosition =
+      //       sortedStudents.findIndex(
+      //         (student) => student.studentId?._id === studentId
+      //       ) + 1;
+
+      //     return {
+      //       ...score,
+      //       position: studentPosition,
+      //     };
+      //   })
       // );
-const filteredScores = response.data.scores.filter(
-  (score) =>
-    score.marksObtained !== undefined &&
-    score?.examId?.name?.toUpperCase() === "SECOND TERM"
-);
-
-if (filteredScores.length === 0) {
-  console.warn("No second term scores found for the student");
-  return [];
-}
-
-// ✅ Fix: Recalculate marksObtained from testscore + examscore
-// (DB may have stored 0, so we always compute it fresh)
-const fixedScores = filteredScores.map((score) => ({
-  ...score,
-  marksObtained: (score.testscore || 0) + (score.examscore || 0),
-}));
-
-console.log("Fixed Scores:", fixedScores);
-
-     const scoresWithPositions = await Promise.all(
-  fixedScores.map(async (score) => {      // ← use fixedScores ✅
+const scoresWithPositions = await Promise.all(
+  filteredScores.map(async (score) => {
     const { examId, subjectId } = score;
 
     if (!examId || !subjectId) {
@@ -340,16 +264,35 @@ console.log("Fixed Scores:", fixedScores);
       return { ...score, position: "-" };
     }
 
-    const allStudentsData = await fetchAllStudentsData(examId._id, subjectId._id);
-
-    const sortedStudents = allStudentsData.sort(
-      (a, b) => b.marksObtained - a.marksObtained
+    const allStudentsData = await fetchAllStudentsData(
+      examId._id,
+      subjectId._id,
+      currentSession._id
     );
 
-    const studentPosition =
-      sortedStudents.findIndex(
-        (student) => student.studentId?._id === studentId
-      ) + 1;
+    // Filter valid marks
+    const validStudents = allStudentsData
+      .filter(s => s.marksObtained !== undefined && s.marksObtained !== null)
+      .map(s => ({ ...s, marksObtained: Number(s.marksObtained) }));
+
+    // Sort descending
+    validStudents.sort((a, b) => b.marksObtained - a.marksObtained);
+
+    // Assign ranks (handles ties)
+    let currentRank = 1;
+    let lastScore = null;
+    validStudents.forEach((student, index) => {
+      if (lastScore !== null && student.marksObtained < lastScore) {
+        currentRank = index + 1;
+      }
+      student.position = currentRank;
+      lastScore = student.marksObtained;
+    });
+
+    // ✅ Corrected student ID comparison
+    const studentPosition = validStudents.find(
+      s => (s.studentId?._id || s.studentId).toString() === studentId.toString()
+    )?.position || "-";
 
     return {
       ...score,
@@ -357,6 +300,7 @@ console.log("Fixed Scores:", fixedScores);
     };
   })
 );
+
 
       return scoresWithPositions;
     } catch (error) {
@@ -380,9 +324,7 @@ console.log("Fixed Scores:", fixedScores);
   //     };
 
   //     const response = await axios.get(
-  //       // `${apiUrl}/api/get-all-scores/${examId}/${subjectId}`,
-  //       `${apiUrl}/api/get-all-scores/${examId}/${subjectId}/${currentSession._id}`,
-     
+  //       `${apiUrl}/api/get-all-scores/${examId}/${subjectId}`,
   //       { headers }
   //     );
 
@@ -407,176 +349,50 @@ console.log("Fixed Scores:", fixedScores);
   //     throw new Error("Failed to fetch all students data");
   //   }
   // };
-const fetchAllStudentsData = async (examId, subjectId) => {
+const fetchAllStudentsData = async (examId, subjectId, sessionId) => {
   try {
     const token = localStorage.getItem("jwtToken");
-    if (!token) throw new Error("JWT token not found");
-
-    // ✅ Guard: don't proceed if session isn't loaded yet
-    if (!currentSession?._id) {
-      console.error("currentSession is not ready yet");
-      return [];
+    if (!token) {
+      throw new Error("JWT token not found");
     }
 
-    const headers = { Authorization: `Bearer ${token}` };
+    const headers = {
+      Authorization: `Bearer ${token}`,
+    };
 
-    console.log("fetchAllStudentsData URL:", 
-      `${apiUrl}/api/get-all-scores/${examId}/${subjectId}/${currentSession._id}`
-    );
-
+    // ✅ Include sessionId in the URL
     const response = await axios.get(
-      `${apiUrl}/api/get-all-scores/${examId}/${subjectId}/${currentSession._id}`,
+      `${apiUrl}/api/get-all-scores/${examId}/${subjectId}/${sessionId}`,
       { headers }
     );
 
+    console.log("All Students Data:", response.data);
+
     const data = response.data;
-    if (data && data.scores) {
+    if (data && data.scores && Array.isArray(data.scores)) {
+      console.log("Number of students with marks:", data.scores.length);
+
       const studentsWithMarks = data.scores.filter(
         (student) =>
           student.marksObtained !== undefined && student.marksObtained !== 0
       );
+
+      console.log("Students with marks:", studentsWithMarks.length);
+
       return studentsWithMarks;
     } else {
+      console.warn("No scores data available for this subject/exam/session.");
       return [];
     }
   } catch (error) {
     console.error("Error fetching all students data:", error);
-    return []; // ✅ Return [] instead of throwing so report card still loads
+    // Throwing a descriptive error
+    throw new Error(
+      `Failed to fetch all students data for examId=${examId}, subjectId=${subjectId}, sessionId=${sessionId}`
+    );
   }
 };
-  // const fetchPsyData = async (studentId) => {
-  //   console.log("Before API call...");
-  //   try {
-  //     const token = localStorage.getItem("jwtToken");
-  //     const headers = {
-  //       Authorization: `Bearer ${token}`,
-  //     };
 
-  //     // const response = await axios.get(
-  //     //   `${apiUrl}/api/get-psy-by-student/${studentId}/${currentSession._id}`,
-  //     //   { headers }
-  //     // );
-  //     const term = "SECOND TERM";
-  //     const response = await axios.get(
-  //       `${apiUrl}/api/get-psy-by-student/${studentId}/${currentSession._id}?term=${term}`,
-  //       { headers }
-  //     );
-  //     console.log("API response status:", response.status);
-  //     console.log("Original data:", response.data);
-
-  //     return { ...response.data };
-  //   } catch (error) {
-  //     console.error("Error fetching student data:", error);
-  //     throw new Error("Failed to fetch student data");
-  //   }
-  // };
-
-  // const fetchPsyData = async (studentId, examId) => {
-  //   console.log("Before API call...");
-
-  //   // Log examId and currentSession._id to identify what is missing
-
-  //   try {
-  //     const token = localStorage.getItem("jwtToken");
-  //     const headers = {
-  //       Authorization: `Bearer ${token}`,
-  //     };
-
-  //     // Make sure `examId` and `currentSession._id` are valid
-  //     if (!examId || !currentSession?._id) {
-  //       throw new Error("Missing examId or sessionId");
-  //     }
-
-  //     // Make the API call with the studentId, examId, and sessionId
-  //     const response = await axios.get(
-  //       `${apiUrl}/api/get-psy-by-student/${studentId}/${examId}/${currentSession._id}`,
-  //       { headers }
-  //     );
-  //     console.log("examId:", examId);
-  //     console.log(
-  //       "currentSession._id:",
-  //       currentSession ? currentSession._id : "No currentSession"
-  //     );
-  //     console.log("API response status:", response.status);
-  //     console.log("Original data:", response.data);
-
-  //     return { ...response.data }; // Return the data for further use
-  //   } catch (error) {
-  //     console.error("Error fetching student data:", error);
-  //     throw new Error("Failed to fetch student data");
-  //   }
-  // };
-  // const fetchPsyData = async (studentId, examId) => {
-  //   console.log("Before API call...");
-
-  //   // Log `examId` and `currentSession` to ensure they are being passed correctly
-  //   console.log("examId:", examId);
-  //   console.log("currentSession:", currentSession);
-
-  //   try {
-  //     const token = localStorage.getItem("jwtToken");
-  //     const headers = {
-  //       Authorization: `Bearer ${token}`,
-  //     };
-
-  //     // Make sure `examId` and `currentSession._id` are valid
-  //     if (!examId || !currentSession?._id) {
-  //       throw new Error("Missing examId or sessionId");
-  //     }
-
-  //     // Make the API call with the studentId, examId, and sessionId
-  //     const response = await axios.get(
-  //       `${apiUrl}/api/get-psy-by-student/${studentId}/${examId}/${currentSession._id}`,
-  //       { headers }
-  //     );
-  //     console.log("API response status:", response.status);
-  //     console.log("Original data:", response.data);
-
-  //     return { ...response.data }; // Return the data for further use
-  //   } catch (error) {
-  //     console.error("Error fetching student data:", error);
-  //     throw new Error("Failed to fetch student data");
-  //   }
-  // };
-  // const fetchPsyData = async (studentId) => {
-  //   console.log("Before API call...");
-
-  //   try {
-  //     const token = localStorage.getItem("jwtToken");
-  //     const headers = {
-  //       Authorization: `Bearer ${token}`,
-  //     };
-
-  //     // Make sure currentSession._id is valid
-  //     if (!currentSession?._id) {
-  //       throw new Error("Missing sessionId");
-  //     }
-
-  //     // Make the API call with studentId and sessionId
-  //     const response = await axios.get(
-  //       `${apiUrl}/api/get-psy-by-student/${studentId}/${currentSession._id}`,
-  //       { headers }
-  //     );
-  //     console.log("API response status:", response.status);
-  //     console.log("Original data:", response.data);
-
-  //     const filteredScores = response.data.marks.filter(
-  //       (mark) => mark.examName?.toUpperCase() === "SECOND TERM" // Use examName instead of examId
-  //     );
-
-  //     if (filteredScores.length === 0) {
-  //       console.warn("No second term scores found for the student");
-  //       return []; // <<< Important: Return empty array instead of throwing
-  //     }
-
-  //     console.log("Filtered Scores:", filteredScores);
-
-  //     return filteredScores; // Return filtered scores
-  //   } catch (error) {
-  //     console.error("Error fetching student data:", error);
-  //     return []; // <<< Always return an empty array in case of error
-  //   }
-  // };
   const fetchPsyData = async (studentId) => {
     console.log("Before API call...");
 
@@ -592,7 +408,7 @@ const fetchAllStudentsData = async (examId, subjectId) => {
       }
 
       // Define the exam name you are filtering by
-      const examName = "SECOND TERM"; // You can dynamically set this if needed
+      const examName = "SECON TERM"; // You can dynamically set this if needed
 
       // Make the API call with studentId, sessionId, and examName as query params
       const response = await axios.get(
@@ -612,7 +428,7 @@ const fetchAllStudentsData = async (examId, subjectId) => {
 
       if (filteredScores.length === 0) {
         console.warn("No second term scores found for the student");
-  
+        alert("No second term scores available for this student."); // User-friendly alert
         return []; // Return empty array
       }
 
@@ -620,7 +436,7 @@ const fetchAllStudentsData = async (examId, subjectId) => {
       return filteredScores; // Return filtered scores
     } catch (error) {
       console.error("Error fetching student data:", error);
-   
+      alert("An error occurred while fetching data. Please try again."); // Error message
       return []; // Always return empty array in case of error
     }
   };
@@ -796,35 +612,15 @@ const fetchAllStudentsData = async (examId, subjectId) => {
 
   console.log("Total Marks Obtained:", totalMarksObtained); // Log totalMarksObtained
 
-  // const totalMarks = studentData?.scores
-  //   ? studentData.scores.length * 100 // Assuming 100 marks per subject
-  //   : 0;
+
   const totalMarks = studentData ? studentData.length * 100 : 0;
 
-  // const averageMarks = studentData?.scores
-  //   ? (
-  //       (studentData.scores.reduce(
-  //         (acc, score) => acc + (score.marksObtained || 0),
-  //         0
-  //       ) /
-  //         totalMarks) *
-  //       100
-  //     ).toFixed(1)
-  //   : 0;
 
   const averageMarks = totalMarks
     ? ((totalMarksObtained / totalMarks) * 100).toFixed(1)
     : 0;
 
-  // const calculateGrade = (comment) => {
-  //   // Use your existing gradeDefinitions to find a grade with a similar comment
-  //   const matchingGrade = gradeDefinitions.find((grade) =>
-  //     comment.toLowerCase().includes(grade.comment.toLowerCase())
-  //   );
 
-  //   // Return the grade if a matching grade is found
-  //   return matchingGrade ? matchingGrade.grade : "-";
-  // };
 
   const calculateGrade = (comment) => {
     // Use your existing gradeDefinitions to find a grade with a similar comment
@@ -1340,9 +1136,10 @@ const fetchAllStudentsData = async (examId, subjectId) => {
                             : "-"}
                         </td>{" "}
                         {/* Obtained Marks */}
-                        <td>
-                          {score?.position !== undefined ? score.position : "-"}
-                        </td>{" "}
+                      
+                          <td>{score?.position !== undefined ? score.position : "-"}</td>
+
+                       
                         {/* Position */}
                         <td>{calculateGrade(score?.comment) || "-"}</td>{" "}
                         {/* Grade */}
