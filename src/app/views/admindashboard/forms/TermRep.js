@@ -373,7 +373,9 @@ const TermRep = ({ studentId }) => {
       };
 
       const response = await axios.get(
-        `${apiUrl}/api/get-all-scores/${examId}/${subjectId}`,
+        // `${apiUrl}/api/get-all-scores/${examId}/${subjectId}`,
+        `${apiUrl}/api/get-all-scores/${examId}/${subjectId}/${currentSession._id}`,
+     
         { headers }
       );
 
