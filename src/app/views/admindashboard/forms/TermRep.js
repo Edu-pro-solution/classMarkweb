@@ -361,46 +361,82 @@ const TermRep = ({ studentId }) => {
   //   console.error("Missing examId or subjectId:", score);
   // }
 
-  const fetchAllStudentsData = async (examId, subjectId) => {
-    try {
-      const token = localStorage.getItem("jwtToken");
-      if (!token) {
-        throw new Error("JWT token not found");
-      }
+  // const fetchAllStudentsData = async (examId, subjectId) => {
+  //   try {
+  //     const token = localStorage.getItem("jwtToken");
+  //     if (!token) {
+  //       throw new Error("JWT token not found");
+  //     }
 
-      const headers = {
-        Authorization: `Bearer ${token}`,
-      };
+  //     const headers = {
+  //       Authorization: `Bearer ${token}`,
+  //     };
 
-      const response = await axios.get(
-        // `${apiUrl}/api/get-all-scores/${examId}/${subjectId}`,
-        `${apiUrl}/api/get-all-scores/${examId}/${subjectId}/${currentSession._id}`,
+  //     const response = await axios.get(
+  //       // `${apiUrl}/api/get-all-scores/${examId}/${subjectId}`,
+  //       `${apiUrl}/api/get-all-scores/${examId}/${subjectId}/${currentSession._id}`,
      
-        { headers }
-      );
+  //       { headers }
+  //     );
 
-      console.log("All Students Data:", response.data);
+  //     console.log("All Students Data:", response.data);
 
-      const data = response.data;
-      if (data && data.scores) {
-        console.log("Number of students with marks:", data.scores.length);
-        const studentsWithMarks = data.scores.filter(
-          (student) =>
-            student.marksObtained !== undefined && student.marksObtained !== 0
-        );
-        console.log("Students with marks:", studentsWithMarks);
+  //     const data = response.data;
+  //     if (data && data.scores) {
+  //       console.log("Number of students with marks:", data.scores.length);
+  //       const studentsWithMarks = data.scores.filter(
+  //         (student) =>
+  //           student.marksObtained !== undefined && student.marksObtained !== 0
+  //       );
+  //       console.log("Students with marks:", studentsWithMarks);
 
-        return studentsWithMarks;
-      } else {
-        console.log("No scores data available.");
-        return [];
-      }
-    } catch (error) {
-      console.error("Error fetching all students data:", error);
-      throw new Error("Failed to fetch all students data");
+  //       return studentsWithMarks;
+  //     } else {
+  //       console.log("No scores data available.");
+  //       return [];
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching all students data:", error);
+  //     throw new Error("Failed to fetch all students data");
+  //   }
+  // };
+const fetchAllStudentsData = async (examId, subjectId) => {
+  try {
+    const token = localStorage.getItem("jwtToken");
+    if (!token) throw new Error("JWT token not found");
+
+    // ✅ Guard: don't proceed if session isn't loaded yet
+    if (!currentSession?._id) {
+      console.error("currentSession is not ready yet");
+      return [];
     }
-  };
 
+    const headers = { Authorization: `Bearer ${token}` };
+
+    console.log("fetchAllStudentsData URL:", 
+      `${apiUrl}/api/get-all-scores/${examId}/${subjectId}/${currentSession._id}`
+    );
+
+    const response = await axios.get(
+      `${apiUrl}/api/get-all-scores/${examId}/${subjectId}/${currentSession._id}`,
+      { headers }
+    );
+
+    const data = response.data;
+    if (data && data.scores) {
+      const studentsWithMarks = data.scores.filter(
+        (student) =>
+          student.marksObtained !== undefined && student.marksObtained !== 0
+      );
+      return studentsWithMarks;
+    } else {
+      return [];
+    }
+  } catch (error) {
+    console.error("Error fetching all students data:", error);
+    return []; // ✅ Return [] instead of throwing so report card still loads
+  }
+};
   // const fetchPsyData = async (studentId) => {
   //   console.log("Before API call...");
   //   try {
