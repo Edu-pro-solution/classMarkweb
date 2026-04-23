@@ -605,7 +605,7 @@ const fetchAllStudentsData = async (examId, subjectId) => {
 
       if (filteredScores.length === 0) {
         console.warn("No second term scores found for the student");
-        alert("No second term scores available for this student."); // User-friendly alert
+  
         return []; // Return empty array
       }
 
@@ -613,7 +613,7 @@ const fetchAllStudentsData = async (examId, subjectId) => {
       return filteredScores; // Return filtered scores
     } catch (error) {
       console.error("Error fetching student data:", error);
-      alert("An error occurred while fetching data. Please try again."); // Error message
+   
       return []; // Always return empty array in case of error
     }
   };
