@@ -41,7 +41,7 @@ import { useReactToPrint } from "react-to-print";
 import FormDialog2 from "../../../../app/views/material-kit/dialog/FormDialog2";
 import useFetch from "../../../../hooks/useFetch";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import EditStudent from "./EditStudent";
 import "./print.css";
 
@@ -103,6 +103,7 @@ const Info = () => {
   const [editStudentData, setEditStudentData] = useState(null);
   const [anchorElMap, setAnchorElMap] = useState({});
   const [newPassword, setNewPassword] = useState("");
+const navigate = useNavigate(); // ← add this
 
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
@@ -246,6 +247,68 @@ const Info = () => {
           </Box>
           <Box className="breadcrumb">
             <FormDialog2 />
+          </Box>
+          <Box
+            className="breadcrumb"
+            style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}
+          >
+            {/* Existing print button */}
+            <button
+              onClick={handlePrint}
+              style={{
+                backgroundColor: "white",
+                border: "1px solid black",
+                padding: "8px 14px",
+                borderRadius: "10px",
+                cursor: "pointer",
+              }}
+            >
+              🖨 Print Student List
+            </button>
+
+            {/* Bulk print buttons */}
+            <button
+              onClick={() => navigate(`/dashboard/bulk-print/JS1/first-term`)}
+              style={{
+                backgroundColor: "#042954",
+                color: "white",
+                border: "none",
+                padding: "8px 14px",
+                borderRadius: "10px",
+                cursor: "pointer",
+                fontWeight: "bold",
+              }}
+            >
+              🖨 Bulk Print — 1st Term
+            </button>
+            <button
+              onClick={() => navigate(`/dashboard/bulk-print/JS1/second-term`)}
+              style={{
+                backgroundColor: "#042954",
+                color: "white",
+                border: "none",
+                padding: "8px 14px",
+                borderRadius: "10px",
+                cursor: "pointer",
+                fontWeight: "bold",
+              }}
+            >
+              🖨 Bulk Print — 2nd Term
+            </button>
+            <button
+              onClick={() => navigate(`/dashboard/bulk-print/JS1/third-term`)}
+              style={{
+                backgroundColor: "#042954",
+                color: "white",
+                border: "none",
+                padding: "8px 14px",
+                borderRadius: "10px",
+                cursor: "pointer",
+                fontWeight: "bold",
+              }}
+            >
+              🖨 Bulk Print — 3rd Term
+            </button>
           </Box>
           <Box className="breadcrumb">
             <button

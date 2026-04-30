@@ -79,6 +79,7 @@ import Waec from "./forms/Waec";
 import CreateJamb from "./forms/CreateJamb";
 import ManageJamb from "./forms/ManageJamb";
 import JambSingle from "./forms/JambSingle";
+import BulkPrintClass from "./forms/BulkPrintClass";
 // import Js1b from "./forms/Js1b";
 
 const Analytics = Loadable(lazy(() => import("./Analytics")));
@@ -241,6 +242,12 @@ const adminDashboardRoutes = [
   {
     path: "/dashboard/tabulation-sheet",
     element: <Tab />,
+    auth: "admin",
+  },
+    // ── Bulk Print Route ──
+  {
+    path: "/dashboard/bulk-print/:classId/:term",
+    element: <BulkPrintClass />,
     auth: "admin",
   },
   {
