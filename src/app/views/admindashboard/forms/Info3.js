@@ -259,15 +259,15 @@ const navigate = useNavigate();
   >
     🖨 Print Student List
   </button>
-  <button onClick={() => navigate(`/dashboard/bulk-print/JS2/first-term`)}
+  <button onClick={() => navigate(`/dashboard/bulk-print/JS3/first-term`)}
     style={{ backgroundColor: "#042954", color: "white", border: "none", padding: "8px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "bold" }}>
     🖨 Bulk Print — 1st Term
   </button>
-  <button onClick={() => navigate(`/dashboard/bulk-print/JS2/second-term`)}
+  <button onClick={() => navigate(`/dashboard/bulk-print/JS3/second-term`)}
     style={{ backgroundColor: "#042954", color: "white", border: "none", padding: "8px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "bold" }}>
     🖨 Bulk Print — 2nd Term
   </button>
-  <button onClick={() => navigate(`/dashboard/bulk-print/JS2/third-term`)}
+  <button onClick={() => navigate(`/dashboard/bulk-print/JS3/third-term`)}
     style={{ backgroundColor: "#042954", color: "white", border: "none", padding: "8px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "bold" }}>
     🖨 Bulk Print — 3rd Term
   </button>
