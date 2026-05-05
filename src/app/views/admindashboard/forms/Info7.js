@@ -105,6 +105,7 @@ const navigate = useNavigate();
   const [newPassword, setNewPassword] = useState("");
   const componentRef = useRef();
 
+
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
   const apiUrl = process.env.REACT_APP_API_URL;
@@ -294,7 +295,8 @@ const navigate = useNavigate();
             <FormDialog2 />
           </Box>
 
-        <Box className="breadcrumb" style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }} > <button onClick={handlePrint} style={{ backgroundColor: "white", border: "1px solid black", padding: "8px 14px", borderRadius: "10px", cursor: "pointer" }} > 🖨 Print Student List </button> <button onClick={() => navigate(`/dashboard/bulk-print/JS2/first-term`)} style={{ backgroundColor: "#042954", color: "white", border: "none", padding: "8px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "bold" }}> 🖨 Bulk Print — 1st Term </button> <button onClick={() => navigate(`/dashboard/bulk-print/JS2/second-term`)} style={{ backgroundColor: "#042954", color: "white", border: "none", padding: "8px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "bold" }}> 🖨 Bulk Print — 2nd Term </button> <button onClick={() => navigate(`/dashboard/bulk-print/JS2/third-term`)} style={{ backgroundColor: "#042954", color: "white", border: "none", padding: "8px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "bold" }}> 🖨 Bulk Print — 3rd Term </button> </Box>
+   <Box className="breadcrumb" style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }} > <button onClick={handlePrint} style={{ backgroundColor: "white", border: "1px solid black", padding: "8px 14px", borderRadius: "10px", cursor: "pointer" }} > 🖨 Print Student List </button> <button onClick={() => navigate(`/dashboard/bulk-print/JS2/first-term`)} style={{ backgroundColor: "#042954", color: "white", border: "none", padding: "8px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "bold" }}> 🖨 Bulk Print — 1st Term </button> <button onClick={() => navigate(`/dashboard/bulk-print/JS2/second-term`)} style={{ backgroundColor: "#042954", color: "white", border: "none", padding: "8px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "bold" }}> 🖨 Bulk Print — 2nd Term </button> <button onClick={() => navigate(`/dashboard/bulk-print/JS2/third-term`)} style={{ backgroundColor: "#042954", color: "white", border: "none", padding: "8px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "bold" }}> 🖨 Bulk Print — 3rd Term </button> </Box>
+
 
           <Box width="100%" overflow="auto" ref={componentRef}>
             <div class="col-xl-12 wow fadeInUp" data-wow-delay="1.5s">

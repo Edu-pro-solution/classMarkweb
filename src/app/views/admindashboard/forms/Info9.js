@@ -33,6 +33,7 @@ import {
   TableRow,
 } from "@mui/material";
 import { Container } from "@mui/material";
+import { Link, useNavigate } from "react-router-dom";
 import EditIcon from "@mui/icons-material/Edit"; // Import the Edit icon
 import DeleteIcon from "@mui/icons-material/Delete";
 import RowCards from "../shared/RowCards";
@@ -40,7 +41,6 @@ import { Breadcrumb } from "../../../../app/components";
 import FormDialog2 from "../../../../app/views/material-kit/dialog/FormDialog2";
 import useFetch from "../../../../hooks/useFetch";
 import axios from "axios";
-import { Link } from "react-router-dom";
 import { useReactToPrint } from "react-to-print";
 
 import EditStudent from "./EditStudent";
@@ -102,6 +102,7 @@ const Info9 = () => {
   const [editStudentData, setEditStudentData] = useState(null);
   const [anchorElMap, setAnchorElMap] = useState({});
   const [newPassword, setNewPassword] = useState("");
+const navigate = useNavigate();
 
   const componentRef = useRef();
 
@@ -249,19 +250,8 @@ const Info9 = () => {
             <FormDialog2 />
           </Box>
 
-          <Box className="breadcrumb">
-            <button
-              onClick={handlePrint}
-              style={{
-                backgroundColor: "white",
-                border: "1px solid black",
-                padding: "8px",
-                borderRadius: "10px",
-              }}
-            >
-              Print this out!
-            </button>
-          </Box>
+       <Box className="breadcrumb" style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }} > <button onClick={handlePrint} style={{ backgroundColor: "white", border: "1px solid black", padding: "8px 14px", borderRadius: "10px", cursor: "pointer" }} > 🖨 Print Student List </button> <button onClick={() => navigate(`/dashboard/bulk-print/JS2/first-term`)} style={{ backgroundColor: "#042954", color: "white", border: "none", padding: "8px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "bold" }}> 🖨 Bulk Print — 1st Term </button> <button onClick={() => navigate(`/dashboard/bulk-print/JS2/second-term`)} style={{ backgroundColor: "#042954", color: "white", border: "none", padding: "8px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "bold" }}> 🖨 Bulk Print — 2nd Term </button> <button onClick={() => navigate(`/dashboard/bulk-print/JS2/third-term`)} style={{ backgroundColor: "#042954", color: "white", border: "none", padding: "8px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "bold" }}> 🖨 Bulk Print — 3rd Term </button> </Box>
+
 
           <Box width="100%" overflow="auto" ref={componentRef}>
             <div class="col-xl-12 wow fadeInUp" data-wow-delay="1.5s">
