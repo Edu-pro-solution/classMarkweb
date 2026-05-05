@@ -41,7 +41,6 @@ import FormDialog2 from "../../../../app/views/material-kit/dialog/FormDialog2";
 import useFetch from "../../../../hooks/useFetch";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Link } from "react-router-dom";
 import { useReactToPrint } from "react-to-print";
 
 import EditStudent from "./EditStudent";
