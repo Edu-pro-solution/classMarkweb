@@ -1,179 +1,60 @@
 import axios from 'axios'
 import {
-  TEACHER_DELETE_FAIL,
-  TEACHER_DELETE_REQUEST,
-  TEACHER_DELETE_SUCCESS,
-  TEACHER_LIST_FAIL,
-  TEACHER_LIST_REQUEST,
-  TEACHER_LIST_SUCCESS,
-  TEACHER_REGISTER_FAIL,
-  TEACHER_REGISTER_REQUEST,
-  TEACHER_REGISTER_SUCCESS,
-  TEACHER_SALARY_FAIL,
-  TEACHER_SALARY_REQUEST,
-  TEACHER_SALARY_SUCCESS,
+  TEACHER_LIST_REQUEST, TEACHER_LIST_SUCCESS, TEACHER_LIST_FAIL,
+  TEACHER_REGISTER_REQUEST, TEACHER_REGISTER_SUCCESS, TEACHER_REGISTER_FAIL,
+  TEACHER_DELETE_REQUEST, TEACHER_DELETE_SUCCESS, TEACHER_DELETE_FAIL,
+  TEACHER_SALARY_REQUEST, TEACHER_SALARY_SUCCESS, TEACHER_SALARY_FAIL,
 } from '../constants/teacherConstants'
 
-export const PaySalary = (
-  teachername,
-  teacherid,
+const authHeader = () => {
+  const token = localStorage.getItem('jwtToken')
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
 
-  salaryForTheYear,
-  salaryForTheMonth,
-  salaryAmount
-) => async (dispatch, getState) => {
+// GET /api/get-teachers/:sessionId
+export const listTeachers = (sessionId) => async (dispatch) => {
   try {
-    dispatch({
-      type: TEACHER_SALARY_REQUEST,
-    })
-    const {
-      userLogin: { userCred },
-    } = getState()
-    const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${userCred.token}`,
-      },
-    }
-    const { data } = await axios.post(
-      `/api/teachers/fees/${teachername}/${teacherid}`,
-      {
-        salaryForTheYear,
-        salaryForTheMonth,
-        salaryAmount,
-      },
-      config
-    )
-    dispatch({
-      type: TEACHER_SALARY_SUCCESS,
-      payload: data,
-    })
-    //we are getting  the json data from our backend request so we need to convert it into the
-    //string before we save them in our local storage of our  browser
+    dispatch({ type: TEACHER_LIST_REQUEST })
+    const { data } = await axios.get(`/api/get-teachers/${sessionId}`, { headers: authHeader() })
+    dispatch({ type: TEACHER_LIST_SUCCESS, payload: Array.isArray(data) ? data : data?.data || [] })
   } catch (error) {
-    dispatch({
-      type: TEACHER_SALARY_FAIL,
-      payload:
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message,
-    })
+    dispatch({ type: TEACHER_LIST_FAIL, payload: error.response?.data?.message || error.message })
   }
 }
 
-//TEACHER REGISTER
-
-export const teacherregister = (
-  teacher_name,
-
-  qualification,
-
-  address,
-
-  contact_no,
-  gender,
-  previous_school,
-
-  age,
-  email,
-  estimated_salary,
-  image,
-  subjectToTeach
-) => async (dispatch, getState) => {
+// POST /api/create-teachers
+export const teacherregister = (teacherData) => async (dispatch) => {
   try {
-    dispatch({
-      type: TEACHER_REGISTER_REQUEST,
+    dispatch({ type: TEACHER_REGISTER_REQUEST })
+    const { data } = await axios.post('/api/create-teachers', teacherData, {
+      headers: { 'Content-Type': 'application/json', ...authHeader() },
     })
-    //we need to send headers information so we declaring it inside the config
-    const {
-      userLogin: { userCred },
-    } = getState()
-    const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${userCred.token}`,
-      },
-    }
-    const { data } = await axios.post(
-      '/api/teachers/register',
-      {
-        teacher_name,
-
-        qualification,
-
-        address,
-
-        contact_no,
-        gender,
-        previous_school,
-
-        age,
-        email,
-        estimated_salary,
-        image,
-        subjectToTeach,
-      },
-      config
-    )
-    dispatch({
-      type: TEACHER_REGISTER_SUCCESS,
-      payload: data,
-    })
-    //we are getting  the json data from our backend request so we need to convert it into the
-    //string before we save them in our local storage of our  browser
+    dispatch({ type: TEACHER_REGISTER_SUCCESS, payload: data })
   } catch (error) {
-    dispatch({
-      type: TEACHER_REGISTER_FAIL,
-      payload:
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message,
-    })
+    dispatch({ type: TEACHER_REGISTER_FAIL, payload: error.response?.data?.message || error.message })
   }
 }
 
-//FOLLOWING IS FOR DELETING THE Teacher
-
+// DELETE /api/users/:userId
 export const deleteTeacher = (id) => async (dispatch) => {
   try {
-    dispatch({
-      type: TEACHER_DELETE_REQUEST,
-    })
-    const { data } = await axios.delete(`/api/teachers/delete/${id}`)
-    dispatch({
-      type: TEACHER_DELETE_SUCCESS,
-      payload: data,
-    })
+    dispatch({ type: TEACHER_DELETE_REQUEST })
+    const { data } = await axios.delete(`/api/users/${id}`, { headers: authHeader() })
+    dispatch({ type: TEACHER_DELETE_SUCCESS, payload: data })
   } catch (error) {
-    dispatch({
-      type: TEACHER_DELETE_FAIL,
-      payload:
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message,
-    })
+    dispatch({ type: TEACHER_DELETE_FAIL, payload: error.response?.data?.message || error.message })
   }
 }
 
-//TEACHER all
-
-export const listTeachers = () => async (dispatch) => {
+// Teacher salary is managed via receipts in this backend — stub kept for compatibility
+export const PaySalary = (teachername, teacherid, salaryForTheYear, salaryForTheMonth, salaryAmount) => async (dispatch) => {
   try {
-    dispatch({
-      type: TEACHER_LIST_REQUEST,
-    })
-    const { data } = await axios.get('/api/teachers')
-    dispatch({
-      type: TEACHER_LIST_SUCCESS,
-      payload: data,
-    })
+    dispatch({ type: TEACHER_SALARY_REQUEST })
+    const { data } = await axios.post('/api/receipt', {
+      teachername, teacherid, salaryForTheYear, salaryForTheMonth, salaryAmount, type: 'salary',
+    }, { headers: { 'Content-Type': 'application/json', ...authHeader() } })
+    dispatch({ type: TEACHER_SALARY_SUCCESS, payload: data })
   } catch (error) {
-    dispatch({
-      type: TEACHER_LIST_FAIL,
-      payload:
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message,
-    })
+    dispatch({ type: TEACHER_SALARY_FAIL, payload: error.response?.data?.message || error.message })
   }
 }

@@ -1,6 +1,5 @@
-import { createStore, combineReducers, applyMiddleware } from "redux";
-import thunk from "redux-thunk";
-import { composeWithDevTools } from "redux-devtools-extension";
+import { createStore, combineReducers, applyMiddleware, compose } from "redux";
+import { thunk } from "redux-thunk";
 import { studentListReducer } from "./reducers/studentReducers";
 import { userLoginReducer } from "./reducers/userReducers";
 import {
@@ -11,10 +10,7 @@ import {
   studentAttendanceReducer,
   studentFeesReducer,
 } from "./reducers/studentReducers";
-import {
-  allIncomeReducer,
-  allSalaryReducer,
-} from "./reducers/miscellaneousReducers";
+import { allIncomeReducer, allSalaryReducer } from "./reducers/miscellaneousReducers";
 import {
   teacherSalaryReducer,
   teacherRegisterReducer,
@@ -27,6 +23,7 @@ import {
   staffDeleteReducer,
   staffListReducer,
 } from "./reducers/staffReducers";
+
 const reducer = combineReducers({
   studentList: studentListReducer,
   studentClassList: studentClassListReducer,
@@ -47,19 +44,22 @@ const reducer = combineReducers({
   allIncome: allIncomeReducer,
   allSalary: allSalaryReducer,
 });
+
 const userInfoFromStorage = localStorage.getItem("userCred")
   ? JSON.parse(localStorage.getItem("userCred"))
   : null;
 
-//remember the above should be null
 const initialState = {
   userLogin: { userCred: userInfoFromStorage },
 };
+
 const middleware = [thunk];
-const store = createStore(
-  reducer,
-  initialState,
-  composeWithDevTools(applyMiddleware(...middleware))
-);
+
+const composeEnhancers =
+  typeof window !== "undefined" && window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__
+    ? window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__
+    : compose;
+
+const store = createStore(reducer, initialState, composeEnhancers(applyMiddleware(...middleware)));
 
 export default store;
