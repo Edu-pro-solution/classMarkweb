@@ -13,7 +13,7 @@ import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { SessionContext } from "@/contexts/SessionContext";
 import useFetch from "@/hooks/useFetch";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logohlhs.png";
 import { toClassRouteParam } from "@/lib/class-utils";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
