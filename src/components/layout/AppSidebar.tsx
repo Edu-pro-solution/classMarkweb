@@ -499,10 +499,10 @@ export function AppSidebar() {
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-bold text-sidebar-foreground leading-tight">
-                EDANA Schools
+                Hlhs Schools
               </span>
               <span className="text-[10px] text-white">
-                edanamonteschools@gmail.com
+               @gmail.com
               </span>
             </div>
           )}
