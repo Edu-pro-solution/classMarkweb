@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logohlhs.png";
 
 const Login = () => {
   const [email, setEmail] = useState("");
