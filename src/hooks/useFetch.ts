@@ -10,7 +10,7 @@ export default function useFetch(url: string | null) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<unknown>(null);
 
-  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
   const fetchData = useCallback(async () => {
     if (!url) return;
