@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Printer } from "lucide-react";
 import useFetch from "@/hooks/useFetch";
 import { SessionContext } from "@/contexts/SessionContext";
-
+import Barcode from "react-barcode";
 const resolveAssetUrl = (value: unknown) => {
   const raw = String(value || "").trim();
   if (!raw) return "";
@@ -132,7 +132,7 @@ export default function StudentIdCard() {
                     </p>
                   ) : null}
 
-                  <div className="print-id-accent mt-8 overflow-hidden rounded-3xl border border-white/30 bg-white/10 p-4 backdrop-blur-sm">
+                  {/* <div className="print-id-accent mt-8 overflow-hidden rounded-3xl border border-white/30 bg-white/10 p-4 backdrop-blur-sm">
                     <div className="print-id-surface mx-auto flex h-36 w-32 items-center justify-center overflow-hidden rounded-2xl border border-white/40 bg-white/90">
                       {studentPhoto ? (
                         <img
@@ -154,7 +154,29 @@ export default function StudentIdCard() {
                     <p className="mt-4 text-center text-xs font-bold uppercase tracking-[0.2em] text-white/80">
                       Student Identity Card
                     </p>
-                  </div>
+                  </div> */}
+                  <div className="print-id-accent mt-8 overflow-hidden rounded-3xl border border-white/30 bg-white/10 p-4 backdrop-blur-sm">
+  <div className="print-id-surface mx-auto flex h-36 w-full items-center justify-center overflow-hidden rounded-2xl border border-white/40 bg-white/95 px-3">
+    {student?.AdmNo ? (
+      <Barcode
+        value={String(student.AdmNo)}
+        format="CODE128"
+        width={1.6}
+        height={70}
+        fontSize={12}
+        margin={4}
+        background="transparent"
+      />
+    ) : (
+      <span className="text-xs font-semibold text-slate-400">
+        No admission number on file
+      </span>
+    )}
+  </div>
+  <p className="mt-4 text-center text-xs font-bold uppercase tracking-[0.2em] text-white/80">
+    Scan for Attendance Check-In
+  </p>
+</div>
                 </div>
 
                 <div className="flex flex-col justify-between px-6 py-7 lg:px-8">
