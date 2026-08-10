@@ -1865,57 +1865,58 @@ export default function ReportCard({ termLabel }: Props) {
               ))}
             </div>
 
-            {/* Teacher / head remarks */}
-            {(psyData?.remarks || psyData?.premarks) && (
-              <div className="border-t border-gray-200 p-2 print:p-1 text-[10px] print:text-[8px] space-y-1">
-                {psyData.remarks  && (
-                  <p>
-                    <span className="font-bold text-primary">Class Teacher's Remark: </span>
-                    {psyData.remarks}
-                  </p>
-                )}
-                {psyData.premarks && (
-                  <p>
-                    <span className="font-bold text-primary">Head Teacher's Remark: </span>
-                    {psyData.premarks}
-                  </p>
-                )}
-              </div>
-            )}
+         
           </div>
         </div>
+{(psyData?.remarks || psyData?.premarks) && (
+  <div className="border border-gray-300 rounded-md p-3 text-[11px] space-y-2">
+    {psyData?.remarks && (
+      <div className="flex gap-2">
+        <span className="font-bold text-primary w-36 shrink-0">
+          Class Teacher's Comment:
+        </span>
+        <span className="flex-1 border-b border-gray-300 pb-0.5">
+          {psyData.remarks}
+        </span>
+      </div>
+    )}
+    {psyData?.premarks && (
+      <div className="flex gap-2">
+        <span className="font-bold text-primary w-36 shrink-0">
+          Principal's Comment:
+        </span>
+        <span className="flex-1 border-b border-gray-300 pb-0.5">
+          {psyData.premarks}
+        </span>
+      </div>
+    )}
+  </div>
+)}
 
-        {/* ── SIGNATURES ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 print:gap-2 pt-4 print:pt-1.5 mt-2 print:mt-1 border-t border-gray-300 text-[11px] print:text-[9px] text-center">
-          <div>
-            <div className="border-b border-gray-400 mt-8 print:mt-3 mb-1" />
-            <p className="text-gray-600 font-semibold">Class Teacher</p>
-          </div>
-          <div>
-            {profile.signature
-              ? <img src={profile.signature} alt="Principal Signature" className="h-10 print:h-6 object-contain mx-auto mb-1" />
-              : <div className="h-10 print:h-6" />
-            }
-            <div className="border-b border-gray-400 mb-1" />
-            <p className="text-gray-600 font-semibold">
-              Principal{profile.principalName ? `: ${profile.principalName}` : ""}
-            </p>
-          </div>
-          <div>
-            <div className="border-b border-gray-400 mt-8 print:mt-3 mb-1" />
-            <p className="text-gray-600 font-semibold">Head Teacher</p>
-          </div>
-        </div>
-
+{/* ── SIGNATURE ── */}
+<div className="flex justify-center pt-4 mt-2 text-[11px] text-center">
+  <div>
+    {profile.signature
+      ? <img src={profile.signature} alt="Principal Signature" className="h-10 object-contain mx-auto mb-1" />
+      : <div className="h-10" />
+    }
+    <div className="border-b border-gray-400 mb-1 w-40 mx-auto" />
+    <p className="text-gray-600 font-semibold">
+      Principal{profile.principalName ? `: ${profile.principalName}` : ""}
+    </p>
+  </div>
+</div>
         {/* Next Resumption */}
         {(profile.resumptionDate || profile.nextTermBegins) && (
-          <p className="text-[11px] print:text-[9px] text-center text-gray-500 mt-1">
+          <p className="text-[11px] text-center text-gray-500 mt-1">
             Next Resumption:{" "}
             <span className="font-bold text-primary">
               {new Date(profile.resumptionDate || profile.nextTermBegins || "").toLocaleDateString()}
             </span>
           </p>
         )}
+    
+       
 
       </div>{/* end printable-area */}
     </div>

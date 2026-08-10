@@ -203,7 +203,7 @@ export default function StudentHomework() {
                     <span className="font-bold">Attachment:</span>{" "}
                     {submission.attachmentUrl ? (
                       <a
-                        href={`${apiUrl}${submission.attachmentUrl}`}
+                        href={submission.attachmentUrl}
                         target="_blank"
                         rel="noreferrer"
                         className="font-medium text-primary underline"
