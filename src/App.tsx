@@ -82,6 +82,8 @@ import ParentResults from "./app/views/parentdashboard/views/Results";
 import ParentMaterials from "./app/views/parentdashboard/views/Materials";
 import ParentHomework from "./app/views/parentdashboard/views/Homework";
 import BulkPrintReports from "./app/views/admindashboard/views/student/BulkPrintReports";
+import ELearning from "./app/views/studentdashboard/views/Elearning";
+import TLearning from "./app/views/teacherdashboard/views/TLearning";
 
 const DashboardWrapper = () => {
   const { user } = useAuth();
@@ -122,6 +124,7 @@ const App = () => (
                 <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
                 <Route path="/teacher/dashboard/student-information/:classId" element={<TeacherStudentInformation />} />
                 <Route path="/teacher/dashboard/subject/:classId" element={<TeacherSubject />} />
+                <Route path="/teacher/dashboard/e-learning" element={<TLearning />} />
                 <Route path="/teacher/dashboard/examlist" element={<TeacherExamList />} />
                 <Route path="/teacher/dashboard/manage-mark-view" element={<TeacherManageMarks />} />
                 {/* legacy teacher class redirects */}
@@ -151,6 +154,7 @@ const App = () => (
                 {/* ── Student ── */}
                 <Route path="/student/dashboard/default" element={<StudentDashboard />} />
                 <Route path="/student/dashboard/my-class" element={<StudentMyClass />} />
+                <Route path="/student/dashboard/e-learning" element={<ELearning />} />
                 <Route path="/student/dashboard/teacher" element={<StudentTeacher />} />
                 <Route path="/student/dashboard/subject" element={<StudentSubject />} />
                 <Route path="/student/dashboard/exam" element={<StudentExamList />} />

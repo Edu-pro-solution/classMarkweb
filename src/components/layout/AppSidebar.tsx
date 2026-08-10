@@ -363,6 +363,13 @@ function buildTeacherNav(classes: any[]) {
         { title: "Generate Questions", url: "/gen-questions", icon: Disc3, key: "gen-questions" },
       ],
     },
+     {
+      label: "E-Learning",
+      items: [
+        { title: "E-Learning", url: "/teacher/dashboard/e-learning", icon: MessageSquareText, key: "e-learning" },
+
+      ],
+    },
     {
       label: "Notice Board",
       items: [{ title: "Noticeboard", url: "/notices", icon: Info, key: "notice" }],
@@ -412,11 +419,18 @@ function buildStudentNav(_classes: any[]) {
         { title: "Take Online Exam", url: "/student/dashboard/manage-online-exam", icon: Laptop, key: "onlinexam" },
       ],
     },
-    {
+     {
       label: "AI Tools",
       items: [
         { title: "Homework", url: "/student/dashboard/homework", icon: MessageSquareText, key: "homework" },
         { title: "Past Questions (JAMB)", url: "https://cbt.edupro.com.ng", icon: Disc3, key: "onlinexam" },
+      ],
+    },
+    {
+      label: "E-Learning",
+      items: [
+        { title: "E-learning", url: "/student/dashboard/e-learning", icon: MessageSquareText, key: "e-learning" },
+       
       ],
     },
     {
