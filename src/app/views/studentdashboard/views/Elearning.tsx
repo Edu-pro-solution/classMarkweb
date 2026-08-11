@@ -448,6 +448,7 @@ export default function ELearning() {
                         )}
                         {lecture.resourceType === "link" ? "Watch Lecture" : "Open Material"}
                       </a>
+                     
                     </Button>
                   </CardContent>
                 </Card>
