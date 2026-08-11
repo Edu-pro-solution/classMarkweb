@@ -367,6 +367,7 @@ function buildTeacherNav(classes: any[]) {
       label: "E-Learning",
       items: [
         { title: "E-Learning", url: "/teacher/dashboard/e-learning", icon: MessageSquareText, key: "e-learning" },
+        { title: "Courses", url: "/teacher/dashboard/courses", icon: MessageSquareText, key: "courses" },
 
       ],
     },
@@ -430,6 +431,7 @@ function buildStudentNav(_classes: any[]) {
       label: "E-Learning",
       items: [
         { title: "E-learning", url: "/student/dashboard/e-learning", icon: MessageSquareText, key: "e-learning" },
+        { title: "Courses", url: "/student/dashboard/courses", icon: MessageSquareText, key: "courses" },
        
       ],
     },
