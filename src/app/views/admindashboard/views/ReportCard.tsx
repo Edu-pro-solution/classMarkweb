@@ -219,10 +219,7 @@ const PRINT_STYLE = `
       line-height: 1.05 !important;
     }
 
-    // .printable-area * {
-    //   line-height: 0.75 !important;
-    // }
-
+    
     table {
       page-break-inside: avoid !important;
       break-inside: avoid !important;
